@@ -86,13 +86,17 @@ ul#menu li { margin:0; display: inline; }
 ul#menu li a { color: #fff; text-decoration: none; padding: 6px; border: 0; }
 ul#menu li a:hover { text-decoration: underline; }
 
-/* we have no tagline now, but perhaps someday */
-div#title #tag_line { margin: 4px 0; font-size: 12px; letter-spacing: -1px; color: #333; }
+div#title {
+  text-align:center;
+  margin: 2em auto 4em auto;
+  text-decoration:none;
+}
 div#title h1 {
   font-weight: normal;
   font-size: 25pt;
-  padding: 0;
-  margin: 0.5em 0.5em;
+}
+div#title a {
+  text-decoration:none;
 }
 div#title span#namepre {
   color: #BBBBBB;
@@ -108,6 +112,9 @@ div#title span#namelast {
   letter-spacing: -0.05em;
   color: #BBBBBB;
 } 
+
+/* we have no tagline now, but perhaps someday */
+div#title #tag_line { margin: 4px 0; font-size: 12px; letter-spacing: -1px; color: #333; }
 
 /*****************************************************************************/
 /*
@@ -138,38 +145,13 @@ pre { font: 10px Courier, "Courier New"; background: #111; color: #fff; padding:
   font-size: 110%;
   text-align: justify;
   width: 40em;
-  margin: 3em auto 2em auto;
+  margin: 1em auto 2em auto;
   line-height: 1.5em;
 }
 
-.title {
-  color: #a00;
-  font-weight: bold;
-  margin-bottom: 2em;
+.site .meta {
+  color: #aaa;
 }
-
-  .site .title a {
-    color: #a00;
-    text-decoration: none;
-  }
-
-  .site .title a:hover {
-    color: black;
-  }
-
-  .site .title a.extra {
-    color: #aaa;
-    text-decoration: none;
-    margin-left: 1em;
-  }
-
-  .site .title a.extra:hover {
-    color: black;
-  }
-
-  .site .meta {
-    color: #aaa;
-  }
 
   .site .footer {
     font-size: 80%;
