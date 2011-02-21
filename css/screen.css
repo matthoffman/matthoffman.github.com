@@ -22,7 +22,7 @@ html, body {
 
 body {
   background-color: white;
-  font: 13.34px droid serif, helvetica, arial, clean, sans-serif;
+  font-family: "Droid Serif", Georgia, "Times New Roman", Times, serif ;
   *font-size: small;
   text-align: center;
 }
@@ -86,7 +86,9 @@ th {
   padding: 5px;
 }
 
-/* top menu */ 
+/************/
+/* top menu */
+/************/
 ul#menu { padding: 4px; margin:0; background: #111; list-style: none; border-bottom: solid 1px #ccc; }
 ul#menu li { margin:0; display: inline; }
 ul#menu li a { color: #fff; text-decoration: none; padding: 6px; border: 0; }
@@ -134,9 +136,19 @@ div#title #tag_line { margin: 4px 0; font-size: 12px; letter-spacing: -1px; colo
 
 /*****************************************************************************/
 /*
-/* Home
+/* index.html styles 
 /*
 /*****************************************************************************/
+
+#home, #posts {
+  border-top: 4px solid #eee;
+  padding-top: 2em;
+}
+
+#home { 
+  padding-left:0.5em;
+  padding-right:0.5em;
+}
 
 ul.posts {
   list-style-type: none;
@@ -145,6 +157,22 @@ ul.posts {
 
 ul.posts li {
   line-height: 1.75em;
+}
+
+ul.posts li a {
+  font-weight:bold;
+  text-decoration: none;
+} 
+
+.postdate {
+  color: #666;
+  font-style:italic;
+  font-size:80%;
+}
+
+.postsummary {
+  color: #666;
+  font-style:italic;
 }
 
 acronym { border-bottom: dotted 1px #ccc; cursor: help; }
@@ -158,7 +186,6 @@ pre { font: 10px Courier, "Courier New"; background: #111; color: #fff; padding:
 /*****************************************************************************/
 
 .site {
-  font-size: 110%;
   text-align: left;
   width: 700px;
   margin: 1em auto 2em auto;
@@ -177,14 +204,17 @@ pre { font: 10px Courier, "Courier New"; background: #111; color: #fff; padding:
     overflow: hidden;
   }
 
-    .site .footer .contact {
+   .site .footer .contact {
       float: left;
       margin-right: 3em;
+   }
+    .copyright { 
+      float:right;
     }
 
-      .site .footer .contact a {
-        color: #8085C1;
-      }
+    .site .footer .contact a {
+      color: #8085C1;
+    }
 
     .site .footer .rss {
       margin-top: 1.1em;
@@ -267,4 +297,63 @@ pre { font: 10px Courier, "Courier New"; background: #111; color: #fff; padding:
 
 .dyn-source { display: none; }
 .clear {clear: both; }
+
+/**************/ 
+/*  Comments  */ 
+/**************/
+
+/* container for disqus comments */ 
+#comments { }
+
+/* Disqus style overrides {{{ */
+#disqus_thread {
+  font-family: "Droid Serif", Georgia, "Times New Roman", Times, serif ;
+	font-size: 9pt ;
+}
+#disqus_thread h3 {
+  font-size: 16pt ;
+	font-weight: bold ;
+	margin-top: 12px ;
+	margin-bottom: 12px ;
+}
+#dsq-global-toolbar {
+	display: none ;
+}
+.dsq-options {
+	display: none ;
+}
+#dsq-new-post {
+	color: #333 ;
+	font-size: 9pt ;
+}
+.dsq-comment-body {
+	margin-left: 34px ;
+}
+.dsq-comment-message {
+	font-size: 9pt ;
+}
+.dsq-comment-header-meta-wrapper {
+	font-size: 9pt ;
+}
+.dsq-comment-footer {
+	margin: 0 0 8px 34px ;
+	font-size: 9pt ;
+}
+.dsq-avatar img {
+	max-height: 24px ;
+	max-width: 24px ;
+}
+.dsq-button {
+	font-weight: normal ;
+}
+.dsq-button-small {
+	padding: 4px 8px ;
+}
+.dsq-like {
+	display: none ;
+}
+.dsq-editedtxt {
+	font-size: 10pt ;
+	margin-top: 0.5em ; 
+}
 
