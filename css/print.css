@@ -1,0 +1,12 @@
+body { background: none; }
+
+div#title { 
+  /* reduce the margins for print */ 
+  margin: 0.5em auto 0.5em auto
+}
+#menu, #disqus_thread, #related { display: none; }
+
+.print-only { display: block; }
+
+.no-print { display: none; }
+
