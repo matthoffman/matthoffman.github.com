@@ -1,0 +1,2 @@
+#!/bin/sh
+jekyll && rsync -avz --delete _site/ matt-thinks-so.com:/home/a404/public_html/
