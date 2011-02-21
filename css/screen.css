@@ -57,6 +57,27 @@ h6 {
   font-size: 100%;
 }
 
+#title h1 {
+  font-weight: normal;
+  font-size: 25pt;
+  padding: 0;
+  margin: 0.5em 0.5em;
+}
+#title span#namepre {
+  color: #BBBBBB;
+}
+#title span#namefirst {
+  font-weight: bold;
+  color: #3D3B38;
+}
+#title span#namemiddle {
+  color: #917744;
+}
+#title span#namelast {
+  letter-spacing: -0.05em;
+  color: #BBBBBB;
+} 
+
 
 p {
   margin: 1em 0;
