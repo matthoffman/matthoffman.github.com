@@ -90,6 +90,15 @@ div#title {
   text-align:center;
   margin: 2em auto 4em auto;
   text-decoration:none;
+  display:inline;
+}
+div#titletext {
+  display:inline;
+  margin-bottom:40px;
+}
+div#titleimg {
+  float:left;
+  display:inline;
 }
 div#title h1 {
   font-weight: normal;
@@ -112,7 +121,9 @@ div#title span#namelast {
   letter-spacing: -0.05em;
   color: #BBBBBB;
 } 
-
+div#title img {
+  display:inline;
+}
 /* we have no tagline now, but perhaps someday */
 div#title #tag_line { margin: 4px 0; font-size: 12px; letter-spacing: -1px; color: #333; }
 
