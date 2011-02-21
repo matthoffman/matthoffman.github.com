@@ -99,7 +99,6 @@ div#titletext {
 div#titleimg {
   padding-top:4em;
   float:left;
-  display:inline;
 }
 div#title h1 {
   font-weight: normal;
@@ -199,7 +198,8 @@ pre { font: 10px Courier, "Courier New"; background: #111; color: #fff; padding:
 /*****************************************************************************/
 
 #post {
-  padding-top:4em;
+  border-top: 4px solid #eee;
+  padding-top: 2em;
 }
 
 #post #date {
