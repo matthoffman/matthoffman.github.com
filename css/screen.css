@@ -30,11 +30,11 @@ body {
 
 h1 {
   margin-bottom: 1em;
-  font-size: 300%;
+  font-size: 200%;
 }
 
 h2 {
-  font-size: 200%;
+  font-size: 150%;
   margin-top: .5em;
   margin-bottom: .5em;
 }
@@ -97,6 +97,7 @@ div#titletext {
   margin-bottom:40px;
 }
 div#titleimg {
+  padding-top:4em;
   float:left;
   display:inline;
 }
@@ -155,7 +156,7 @@ pre { font: 10px Courier, "Courier New"; background: #111; color: #fff; padding:
 .site {
   font-size: 110%;
   text-align: justify;
-  width: 40em;
+  width: 680px;
   margin: 1em auto 2em auto;
   line-height: 1.5em;
 }
@@ -198,9 +199,21 @@ pre { font: 10px Courier, "Courier New"; background: #111; color: #fff; padding:
 /*****************************************************************************/
 
 #post {
-
+  padding-top:4em;
 }
 
+#post #date {
+  color: #666;
+  text-align: right;
+}
+
+
+#post h1 {
+   font-size: 200%;
+   line-height: 1.25em;
+   text-align: center;
+   margin-left:5px;
+}
   /* standard */
 
   #post pre {
