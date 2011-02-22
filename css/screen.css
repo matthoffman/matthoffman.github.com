@@ -116,13 +116,16 @@ div#title a {
 }
 div#title span#namepre {
   color: #BBBBBB;
+  letter-spacing: -0.05em;
 }
 div#title span#namefirst {
   font-weight: bold;
   color: #3D3B38;
+  letter-spacing: -0.05em;
 }
 div#title span#namemiddle {
   color: #917744;
+  letter-spacing: -0.05em;
 }
 div#title span#namelast {
   letter-spacing: -0.05em;
