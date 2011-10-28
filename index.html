@@ -8,15 +8,16 @@ title: matt thinks so
   Welcome!  This is a collection of things that I've thought, and then written down, for some reason or other. 
   
   {% comment %}
-  Call me pedantic, but I find myself writing up comparisons, articles, or 
-  short literature reviews as a part of my work. Which probably means I'm hopelessly pedantic. But either way, some of these could possibly benefit
-  other people, or at least entertain them with my ignorance ("Can you believe someone THINKS that?!") so they're up here. 
-  Mixed in is the occasional post about coffee or cooking, from times when I pretend that this is a real blog.
+  I sometimes find myself writing up comparisons, articles, or short literature reviews as a part of my work. Which 
+  probably means I'm hopelessly pedantic. But either way, some of these could possibly benefit other people, or at 
+  least entertain them with my ignorance ("Can you believe someone THINKS that?!") so they're up here.  Mixed in is 
+  the occasional post about coffee or cooking, from times when I pretend that this is a real blog.
   </p>
   <p>
   If you're here, then either Google linked you to one of these posts below, or you're looking for information about me.  
-  For the former, hopefully the short descriptions of the posts below is enough to find what you're looking for. For the latter, 
-  I'm afraid the "about me" page is woefully sparse, but you'll find some examples of things I've written below.  Enjoy!
+  For the former, hopefully the short descriptions of the posts below is enough to find what you're looking for. For 
+  the latter, I'm afraid the "about me" page is pretty sparse, but you'll find some examples of things I've written 
+  below.  Enjoy!
   {% endcomment %}
   </p>
   <div id="posts">
@@ -25,17 +26,39 @@ title: matt thinks so
   </p>
   <ul class="posts">
     {% for post in site.posts %}
-      <li>
-        <span class="postdate">
-          {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
-        </span>  
-        <a href="{{ post.url }}">{{ post.title }}</a>
+      {% unless post.veryold %}
+    <li>
+      <span class="postdate">
+        {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
+      </span>  
+      <a href="{{ post.url }}">{{ post.title }}</a>
         {% if post.summary %}
-        <span class="postsummary">
+      <span class="postsummary">
           &mdash;  {{ post.summary }}
-        </span>
+      </span>
         {% endif %}
-      </li>
+      {% endunless %}
+    </li>
+    {% endfor %}
+
+    <br>
+    <br>
+    <p>Here's some much older posts, taken from previous blogs:</p>
+
+    {% for post in site.posts %}
+      {% if post.veryold %}
+    <li>
+      <span class="postdate">
+        {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
+      </span>  
+      <a href="{{ post.url }}">{{ post.title }}</a>
+        {% if post.summary %}
+      <span class="postsummary">
+          &mdash;  {{ post.summary }}
+      </span>
+        {% endif %}
+      {% endif %}
+    </li>
     {% endfor %}
   </ul>
 </div>

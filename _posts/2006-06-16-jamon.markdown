@@ -2,6 +2,9 @@
 title: Another library
 layout: post 
 summary: where I talk briefly about JAMon, a performance monitoring and aggregation library
+categories: old
+veryold: true
+
 ---
 I've been teased that my current project has more external libraries than it does actual lines of code.  Now, I'm not convinced that's a bad thing – I've said before that the hardest thing about leaving Java for some other language would be giving up all of the 3rd-party libraries and projects that do 90% of your work for you. 
 
