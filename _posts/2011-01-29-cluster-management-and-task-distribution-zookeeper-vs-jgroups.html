@@ -81,19 +81,19 @@ With guaranteed message delivery, we could have consistent in-memory views of th
 </tr>
 <tr>
 <td>Elasticity</td>
-<td>I have to look into how elastic JGroups can be without IP multicast.  I know it can work without IP multicast; I just don’t know exactly HOW it works.</td>
+<td><strike>I have to look into how elastic JGroups can be without IP multicast.  I know it can work without IP multicast; I just don’t know exactly HOW it works.</strike> <i>updated 01 March 2011:</i> JGroups has a discovery method called <a href="http://www.jgroups.org/manual/html/user-advanced.html#d0e2789">TCPPING</a>, in which you predefine a set of known members that new members will contact for membership lists. It also has a standalone "gossip router" that performs the same purpose. I've played with this; it works on EC2 without problems. </td>
 </tr>
 <tr>
 <td>Partition-tolerance</td>
-<td>Good question....</td>
+<td><a href="http://www.jgroups.org/manual/html/user-advanced.html#d0e3335">There are options</a>.  JGroups has a merge protocol, but it does require application-specific code to determine what exactly to do when the partitions come back together.</td>
 </tr>
 <tr>
 <td>Scalability</td>
-<td>More speculative, because JGroups has the option for infinite combinations of protocols on its stack.  Worst case, the cluster needs to define two classes of nodes, similar to the Zookeeper implementation: “nodes which can become leaders” and “nodes which can’t.”</td>
+<td>More speculative, because JGroups has the option for infinite combinations of protocols on its stack.  Worst case, the cluster needs to define two classes of nodes, similar to the Zookeeper implementation: “nodes which can become leaders” and “nodes which can’t.”  But JGroups has been deployed with hundreds of nodes.</td>
 </tr>
 <tr>
 <td>EC2-friendliness</td>
-<td>JGroups can be used on EC2 as long as you use TCP-based “multicast” instead of actual IP multicast.</td>
+<td>JGroups can be used on EC2 as long as you use a non-multicast discovery method.</td>
 </tr>
 <tr>
 <td>Deployment Simplicity</td>
