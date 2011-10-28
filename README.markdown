@@ -1,7 +1,7 @@
 Matt's Blog
 ===========
 
-This is the text for my blog, up at <matthoffman.github.com> or <www.matt-thinks-so.com>. 
+This is the repo that generates my Github site at <matthoffman.github.com> and <matt-thinks-so.com>.
 It's parsed into static text by [jekyll](http://jekyllrb.com/).
 
 It's easy, it works, it's hosted for free by github.  And let's be honest -- free is about what my blog is worth.
@@ -11,5 +11,4 @@ and the banner formatting is loosely based on <nvie.com> (although Vincent is a 
 
 The formatting is licensed MIT (use it however you'd like, attribution appreciated but not required) and the text is 
 all licensed under the [Creative Commons Attribution license](http://creativecommons.org/licenses/by/3.0/).
-
 
