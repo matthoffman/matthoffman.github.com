@@ -1,26 +1,107 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
 <head>
+   <meta charset="utf-8">
    <!-- bring in the Droid Sans font from Google --> 
    <link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold' rel='stylesheet' type='text/css'>
    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
    <title>{{ page.title }}</title>
    <meta name="author" content="Matt Hoffman" />
 
-   <!-- syntax highlighting CSS -->
-   <link rel="stylesheet" href="/css/syntax.css" type="text/css" />
+   <!-- HTML5 shim, for IE6-8 support of HTML elements -->
+   <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+   <![endif]-->
 
    <!-- Homepage CSS -->
+   <!--
    <link rel="stylesheet" href="/css/screen.css" type="text/css" media="screen, projection, print" />
    <link rel="stylesheet" href="/css/mobile.css" type="text/css" media="only screen and (max-device-width: 480px)"/>
    <link rel="stylesheet" href="/css/print.css"  type="text/css" media="print"/>
-   
-   <!-- syntax highlighting via javascript --> 
-   <link href="/css/syntaxhighlighter/shThemeDefault.css" rel="stylesheet" type="text/css" />
-   <link href="/css/syntaxhighlighter/shCore.css" rel="stylesheet" type="text/css" />
+   -->
+   <link rel="stylesheet" href="/css/bootstrap.css"/>
 
-   <meta name="viewport" content="width=700, user-scalable=yes, maximum-scale=1.5" /> 
+   <!-- syntax highlighting CSS -->
+   <link rel="stylesheet" href="/css/syntax.css" type="text/css" />
+
+   <!-- syntax highlighting via javascript --> 
+   <link rel="stylesheet" href="/css/syntaxhighlighter/shThemeDefault.css" rel="stylesheet" type="text/css" />
+   <link rel="stylesheet" href="/css/syntaxhighlighter/shCore.css" rel="stylesheet" type="text/css" />
    
+   <!--
+   <meta name="viewport" content="width=700, user-scalable=yes, maximum-scale=1.5" /> 
+   -->
+    <style type="text/css">
+      /* Override some defaults */
+      html, body {
+        background-color: #eee;
+      }
+      body {
+        padding-top: 40px; /* 40px to make the container go all the way to the bottom of the topbar */
+        font-family: "Droid Serif", Georgia, "Times New Roman", Times, serif ;
+      }
+      .container > footer p {
+        text-align: center; /* center align it with the container */
+      }
+      .container {
+        width: 820px; /* downsize our container to make the content feel a bit tighter and more cohesive. NOTE: this removes two full columns from the grid, meaning you only go to 14 columns and not 16. */
+      }
+div#title span#namepre {
+  color: #BBBBBB;
+  letter-spacing: -0.05em;
+}
+div#title span#namefirst {
+  font-weight: bold;
+  color: #3D3B38;
+  letter-spacing: -0.05em;
+}
+div#title span#namemiddle {
+  color: #917744;
+  letter-spacing: -0.05em;
+}
+div#title span#namelast {
+  letter-spacing: -0.05em;
+  color: #BBBBBB;
+} 
+div#title img {
+  display:inline;
+}
+#post {
+  border-top: 4px solid #eee;
+  padding-top: 2em;
+  padding-left:0.5em;
+  padding-right:0.5em;
+}
+#post #date {
+  color: #666;
+  text-align: right;
+}
+
+      /* The white background content wrapper */
+      .container > .content {
+        background-color: #fff;
+        padding: 20px;
+        margin: 0 -20px; /* negative indent the amount of the padding to maintain the grid system */
+        -webkit-border-radius: 0 0 6px 6px;
+           -moz-border-radius: 0 0 6px 6px;
+                border-radius: 0 0 6px 6px;
+        -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+           -moz-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+                box-shadow: 0 1px 2px rgba(0,0,0,.15);
+      }
+
+      /* Page header tweaks */
+      .page-header {
+        padding: 20px 20px 10px;
+        margin: -20px -20px 20px;
+      }
+
+      .topbar .btn {
+        border: 0;
+      }
+
+    </style>
+
 <!-- Google Analytics --> 
 <script type="text/javascript">
 
@@ -36,54 +117,66 @@
 
 </script>
 
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/images/apple-touch-icon-114x114.png">
 </head>
 <body>
 
-<div class="top_menu">
-  <ul id="menu">
-    <li><a href="/">posts</a></li>
+    <div class="topbar">
+      <div class="fill">
+        <div class="container">
+          <a class="brand" href="#">
+            <h1>
+              <span id="namefirst">matt</span>
+              <span id="namemiddle">thinks</span>
+              <span id="namelast">so</span><span id="namepre">&hellip;</span>
+            </h1>
+          </a>
+          <ul class="nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <li><a href="/">home</a></li>
     <li><a href="/about.html">about</a></li>
     <!--
     <li><a href="/resume.html">resume</a></li>
     -->
   </ul>
 </div>
-
-<div class="site">
-  <div id="title" class="title">
-         <div id="titletext" class="titletext">
-         <a href="/">
-          <h1>
-            <span id="namefirst">matt</span>
-            <span id="namemiddle">thinks</span>
-            <span id="namelast">so</span><span id="namepre">&hellip;</span>
-          </h1>
-         </a>
-        </div>
-   </div>
   
+  <div id="container">
   {{ content }}
-  
-  <div class="footer">
+  </div>  
+
+  <footer>
     <div class="contact">
       <p>
         Contact me:  
       </p>
     </div>
     <div class="contact">
+      <address>
       <p>
         <a href="http://github.com/matthoffman/">github.com/matthoffman</a><br />
         <a href="http://twitter.com/matt_thinks_so/">twitter.com/matt_thinks_so</a><br />
-      </p>
+       </p>
+       </address>
     </div>
     <div class="copyright">
       <p>
-      &copy; 2005-2011 Matt Hoffman.  <br>
-      <a rel="license" href="http://creativecommons.org/licenses/by/3.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/3.0/80x15.png" /></a> This <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Text" rel="dct:type">work</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>. 
-
+        &copy; 2005-2011 Matt Hoffman.  <br>
+        <a rel="license" href="http://creativecommons.org/licenses/by/3.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/3.0/80x15.png" /></a> This <span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Text" rel="dct:type">work</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>. 
       </p>
     </div>
-  </div>
+  </footer>
 </div>
 
 {% include scripts.html %}
