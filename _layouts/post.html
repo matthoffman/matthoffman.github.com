@@ -1,8 +1,6 @@
 ---
 layout: default
 ---
-<div class="container">
-
   <div class="post">
     <div class="page-header">
       <h1>{{ page.title }} <small>{{ page.subtitle }}</small></h1>
@@ -11,8 +9,9 @@ layout: default
       {{ page.date | date: "%e" | ordinalize }} {{ page.date | date: "%B"}} {{ page.date | date: "%Y"}}
     </div>
     <div id="tags" class="tags">{% for tag in post.categories %} &middot; <a href="/tags/{{tag}}" rel="tag">{{tag}}</a>{% endfor %}</div>
-
-    {{ content }} 
+    <div class="content">
+      {{ content }} 
+    </div>
 
   </div>
 
@@ -34,4 +33,3 @@ layout: default
     {% include disqus.html %}
   </div>
 
-</div>
