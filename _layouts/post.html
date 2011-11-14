@@ -5,7 +5,7 @@ layout: default
     <div class="page-header">
       <h1>{{ page.title }} <small>{{ page.subtitle }}</small></h1>
     </div>
-    <div id="date" class="date">
+    <div class="postdate">
       {{ page.date | date: "%e" | ordinalize }} {{ page.date | date: "%B"}} {{ page.date | date: "%Y"}}
     </div>
     <div id="tags" class="tags">{% for tag in post.categories %} &middot; <a href="/tags/{{tag}}" rel="tag">{{tag}}</a>{% endfor %}</div>

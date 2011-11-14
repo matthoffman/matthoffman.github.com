@@ -6,7 +6,6 @@ tags:
 - Big Data
 - Programming
 ---
-<div>
 <h2 id="internal-source-marker_0.6950423333328217">The question</h2>
 Which technology stack makes more sense for a distributed task-management framework?
 <h2>The backstory</h2>
@@ -15,25 +14,24 @@ A lot of task-management systems put tasks in one or more queues (Resque, beanst
 
 So the single point of failure needs to go.  I’m looking at some of the options for instead distributing the data (the tree of tasks, who's executing what, whether the nodes are healthy, whether a task has timed out) across multiple servers.
 <h2>The requirements</h2>
-<ol>
-	<li>Consistency: the task tree should be shared between more than one server, with guaranteed consistency.  I.e if server A is serving as the master node and it goes down, another server needs to be able to pick up and continue, with the exact same view of the current task tree.  We don’t want tasks to accidentally get dropped or executed twice because server B’s version of the task tree wasn't up-to-date.</li>
-	<li>Elasticity: nodes have to be able to come online and participate in the cluster, and then drop off again.  The full list of nodes can’t be hard-coded at startup.</li>
-	<li>Partition-tolerance: Ideally, we should be able to handle a network partition.  We can do that at the expense of availability: that is, if there are 5 nodes, numbered 1 through 5, and nodes 1 and 2 get separated from 3 through 5, it’s OK for 1 and 2 to realize they’re the minority and stop processing.   The following caveats apply:
+<dl>
+  <dt>Consistency</dt><dd>The task tree should be shared between more than one server, with guaranteed consistency.  I.e if server A is serving as the master node and it goes down, another server needs to be able to pick up and continue, with the exact same view of the current task tree.  We don’t want tasks to accidentally get dropped or executed twice because server B’s version of the task tree wasn't up-to-date.</dd><br />
+  <dt>Elasticity</dt><dd>Nodes have to be able to come online and participate in the cluster, and then drop off again.  The full list of nodes can’t be hard-coded at startup.</dd><br />
+	<dt>Partition-tolerance</dt><dd>Ideally, we should be able to handle a network partition.  We can do that at the expense of availability: that is, if there are 5 nodes, numbered 1 through 5, and nodes 1 and 2 get separated from 3 through 5, it’s OK for 1 and 2 to realize they’re the minority and stop processing.   The following caveats apply:
 <ol>
 	<li>We need a way to handle an intentional reduction in servers.  That is, if we spun up 10 extra cloud servers for a few hours to help in peak processing, we’d need a way to tell the cluster that we were going to spin them back down again, so the remaining nodes didn’t think they were a minority segment of a partitioned network.</li>
 	<li>In case of a catastrophic failure of a majority of servers, I’d like a way to kick the remaining nodes and tell them to process anyway.  But I’m ok if that requires manual intervention... that’s an extreme case.</li>
-</ol>
-</li>
-	<li>Scalability: I’m targeting 100 nodes as a practical maximum.  In production, we’ve used up to 5 nodes.  I don’t expect us to go above 10 in the near future, so I’m adding an order-of-magnitude safety margin on top of that.  Of course, when the task management framework goes open source, 100 nodes will be quite feasible for users with different problem domains and deployment patterns.  In our typical deployment scenarios, customers prefer fewer, larger servers.</li>
-	<li>EC2:  The clustering option has to be able to run on EC2 instances.  It can't depend on IP multicast.</li>
-	<li>Deployment simplicity:   As few moving parts as possible, to make integrating and deploying the software as simple as possible. Our app is often deployed by the client on their hardware, so we'd like to make their lives as easy as possible. And as the framework goes open source, of course, it's going to be more helpful for a more people if it has a low barrier of entry.</li>
-	<li>Implementation simplicity:  The less code I write, the fewer bugs I introduce.</li>
-	<li>Event bus:  nodes can also pass events to other nodes, typically by multicast.  We use JMS for this currently, and we can continue to do so, but it’d be nice to get rid of that particular moving part if possible.</li>
-</ol>
+</ol></dd>
+<dt>Scalability</dt><dd>I’m targeting 100 nodes as a practical maximum.  In production, we’ve used up to 5 nodes.  I don’t expect us to go above 10 in the near future, so I’m adding an order-of-magnitude safety margin on top of that.  Of course, when the task management framework goes open source, 100 nodes will be quite feasible for users with different problem domains and deployment patterns.  In our typical deployment scenarios, customers prefer fewer, larger servers.</dd><br />
+<dt>EC2</dt><dd> The clustering option has to be able to run on EC2 instances.  It can't depend on IP multicast.</dd><br />
+<dt>Deployment simplicity</dt><dd>  As few moving parts as possible, to make integrating and deploying the software as simple as possible. Our app is often deployed by the client on their hardware, so we'd like to make their lives as easy as possible. And as the framework goes open source, of course, it's going to be more helpful for a more people if it has a low barrier of entry.</dd><br />
+<dt>Implementation simplicity</dt><dd>  The less code I write, the fewer bugs I introduce.</dd><br />
+<dt>Event bus</dt><dd>  Nodes can also pass events to other nodes, typically by multicast.  We use JMS for this currently, and we can continue to do so, but it’d be nice to get rid of that particular moving part if possible.</dd><br />
+</dl>
 There is not necessarily a requirement to persist all tasks to disk, in order to keep them safe between server restarts.  In our previous version, tasks were kept in a JMS queue, and we ended up turning disk persistence off -- in practice, in the case of a failure that requires manual intervention (for example, a JMS broker failure, or the failure of all nodes that had tasks in memory) almost always means that we want to manually restart jobs after the system comes back up -- possibly different jobs, possibly a reduced set of tasks to make up time.  We found that we rarely want to start back up exactly where we left off.
 So, if the solution automatically persists to disk, I’ll probably create a way to bypass that if necessary (a command-line flag that lets us clear the current tasks on startup, perhaps).
 <h2>Zookeeper</h2>
-<table><col width="*"></col> <col width="*"></col> 
+<table class="zebra-striped"><col width="*"></col> <col width="*"></col> 
 <tbody>
 <tr>
 <td>Consistency</td>
@@ -72,7 +70,7 @@ Zookeeper is designed for cluster coordination, and it’s well-thought-out.  I
 </table>
 Zookeeper doesn’t list AIX as a supported environment, which is interesting.  We do have to support AIX (unfortunately).
 <h2>JGroups</h2>
-<table><col width="*"></col> <col width="*"></col> 
+<table class="zebra-striped"><col width="*"></col> <col width="*"></col> 
 <tbody>
 <tr>
 <td>Consistency</td>
@@ -109,6 +107,5 @@ With guaranteed message delivery, we could have consistent in-memory views of th
 </tr>
 </tbody>
 </table>
-</div>
 <h2>Conclusion</h2>
 ...tbd...
