@@ -5,44 +5,45 @@ title: matt thinks so
 
 <div id="home">
   <div id="posts">
-  <p>
-  The posts available here, in chronological order: 
-  </p>
-  <ul class="posts">
-    {% for post in site.posts %}
+    <p>
+    The posts available here, in chronological order: 
+    </p>
+    <ul class="posts">
+      {% for post in site.posts %}
       {% unless post.veryold %}
-    <li>
+      <li>
       <span class="postdate">
         {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
       </span>  
       <a href="{{ post.url }}">{{ post.title }}</a>
-        {% if post.summary %}
+      {% if post.summary %}
       <span class="postsummary">
-          &mdash;  {{ post.summary }}
+        &mdash;  {{ post.summary }}
       </span>
-        {% endif %}
-      {% endunless %}
-    </li>
-    {% endfor %}
-
-    <br>
-    <br>
-    <p>Here's some much older posts, taken from previous blogs:</p>
-
-    {% for post in site.posts %}
-      {% if post.veryold %}
-    <li>
-      <span class="postdate">
-        {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
-      </span>  
-      <a href="{{ post.url }}">{{ post.title }}</a>
-        {% if post.summary %}
-      <span class="postsummary">
-          &mdash;  {{ post.summary }}
-      </span>
-        {% endif %}
       {% endif %}
-    </li>
-    {% endfor %}
-  </ul>
+      {% endunless %}
+      </li>
+      {% endfor %}
+
+      <br>
+      <br>
+      <p>Here's some much older posts, taken from previous blogs:</p>
+
+      {% for post in site.posts %}
+      {% if post.veryold %}
+      <li>
+      <span class="postdate">
+        {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
+      </span>  
+      <a href="{{ post.url }}">{{ post.title }}</a>
+      {% if post.summary %}
+      <span class="postsummary">
+        &mdash;  {{ post.summary }}
+      </span>
+      {% endif %}
+      {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
 </div>
