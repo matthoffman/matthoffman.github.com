@@ -1,49 +1,73 @@
 ---
-layout: default
+layout: base
 title: matt thinks so
 ---
+    <div class="topbar">
+      <div class="fill">
+        <div class="container">
+          <ul class="nav">
+            <li class="active"><a href="/">Home</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
 
-<div id="home">
-  <div id="posts">
-    <p>
-    The posts available here, in chronological order: 
-    </p>
-    <ul class="posts">
-      {% for post in site.posts %}
-      {% unless post.veryold %}
-      <li>
-      <span class="postdate">
-        {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
-      </span>  
-      <a href="{{ post.url }}">{{ post.title }}</a>
-      {% if post.summary %}
-      <span class="postsummary">
-        &mdash;  {{ post.summary }}
-      </span>
-      {% endif %}
-      {% endunless %}
-      </li>
-      {% endfor %}
+    <div class="container">
+      <div id="title" class="title">
+        <a href="/">
+          <h1>
+            <span class="namefirst">matt</span>
+            <span class="namemiddle">thinks</span>
+            <span class="namelast">so</span><span class="namepre">&hellip;</span>
+          </h1>
+        </a>
+      </div>
+  
+      <div id="home">
+        <div id="posts">
+          <p>
+          The posts available here, in chronological order: 
+          </p>
+          <ul class="posts">
+            {% for post in site.posts %}
+            {% unless post.veryold %}
+            <li>
+            <span class="postdate">
+              {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
+            </span>  
+            <a href="{{ post.url }}">{{ post.title }}</a>
+            {% if post.summary %}
+            <span class="postsummary">
+              &mdash;  {{ post.summary }}
+            </span>
+            {% endif %}
+            </li>
+            {% endunless %}
+            {% endfor %}
 
-      <br>
-      <br>
-      <p>Here's some much older posts, taken from previous blogs:</p>
+            <br>
+            <br>
+            <p>Here's some much older posts, taken from previous blogs:</p>
 
-      {% for post in site.posts %}
-      {% if post.veryold %}
-      <li>
-      <span class="postdate">
-        {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
-      </span>  
-      <a href="{{ post.url }}">{{ post.title }}</a>
-      {% if post.summary %}
-      <span class="postsummary">
-        &mdash;  {{ post.summary }}
-      </span>
-      {% endif %}
-      {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-  </div>
-</div>
+            {% for post in site.posts %}
+            {% if post.veryold %}
+            <li>
+            <span class="postdate">
+              {{ post.date | date: "%e" | ordinalize }} {{ post.date | date: "%B"}} {{ post.date | date: "%Y"}}:
+            </span>  
+            <a href="{{ post.url }}">{{ post.title }}</a>
+            {% if post.summary %}
+            <span class="postsummary">
+              &mdash;  {{ post.summary }}
+            </span>
+            {% endif %}
+            </li>
+            {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% include footer.html %}
+    </div>

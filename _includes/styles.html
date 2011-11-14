@@ -38,7 +38,11 @@
       /*.container {*/
         /*width: 820px;*/ /* downsize our container to make the content feel a bit tighter and more cohesive. NOTE: this removes two full columns from the grid, meaning you only go to 14 columns and not 16. */
         /*}*/
-
+      .title {
+        margin-bottom: 40px;
+        text-align: center;
+        margin: 2em auto 4em auto;
+      }
       .namepre {
         color: #BBBBBB;
         letter-spacing: -0.05em;
@@ -47,14 +51,23 @@
         color: #D9D9D9;
         letter-spacing: -0.05em;
       }
+      .title .namefirst {
+        color: #3D3B38;
+        font-weight: bold;
+      }
       .namemiddle {
         color: #BB8E35;
         letter-spacing: -0.05em;
         text-shadow: 0 0 1.2em white, 0 0 0.5em black; /* bit of a glow in most modern browsers */
+        font-weight: normal;
+      }
+      .title .namemiddle {
+        text-shadow: none;
       }
       .namelast {
         letter-spacing: -0.05em;
         color: #BBBBBB;
+        font-weight: normal;
       } 
       .post {
         border-top: 4px solid #eee;
@@ -65,6 +78,15 @@
       .post #date {
         color: #666;
         text-align: right;
+      }
+      .postdate {
+        color: #666;
+        font-style: italic;
+        font-size: 80%;
+      }
+      .postsummary {
+        color: #666;
+        font-style: italic;
       }
 
       /* The white background content wrapper */
