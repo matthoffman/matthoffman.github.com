@@ -33,6 +33,8 @@ Three reasons:
 
 The first reason there is more significant than the other two. Terracotta may still end up as a distributed caching option in the future.
 
+Unfortunately, this isn't as in-depth or thorough of an investigation as <a href="http://matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">part 1</a>. I'm not going to go back through the requirements and then see how the candidates stack up. Infinispan and Hazelcast, our two main candidates, have a very similar feature list on paper, so it came down to a hands-on investigation instead. 
+
 <h2>The plan</h2>
 
 I already had a generic cache interface that the app was using, so my goal was to write an implementation for both Infinispan and Hazelcast and allow us to switch between the two at startup time. That proved to be a bit of a trick --- both have Java configuration options (instead of XML-only configuration) in their most recent versions. Both have some tricks to them.<br>
