@@ -2,6 +2,12 @@
 layout: default
 ---
   <div class="post">
+    {% if page.draft %}
+    <div class="alert-message info">
+      <p><span class="label notice">DRAFT</span>&nbsp; &nbsp; &nbsp; This post is in <strong>draft form</strong>, but it's been in draft so long that I decided to go ahead and publish it in its current form.  <strong>Feedback welcome!</strong></p>
+    </div>
+    {% endif %}
+
     <div class="page-header">
       <h1>{{ page.title }} <small>{{ page.subtitle }}</small></h1>
     </div>

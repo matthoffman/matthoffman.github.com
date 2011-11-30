@@ -35,7 +35,7 @@ So, if the solution automatically persists to disk, I’ll probably create a way
 <tbody>
 <tr>
 <td>Consistency</td>
-<td>Zookeeper pushes everything to disk -- writes are always persisted, for safety.
+<td>Zookeeper pushes everything to disk – writes are always persisted, for safety.
 Zookeeper is designed for cluster coordination, and it’s well-thought-out.  It has documented consistency guarantees, lots of documented recipes for things like leader election, and supports subscription of listeners on tree changes.</td>
 </tr>
 <tr>
@@ -56,7 +56,7 @@ Zookeeper is designed for cluster coordination, and it’s well-thought-out.  I
 </tr>
 <tr>
 <td>Deployment Simplicity</td>
-<td>The main downside for Zookeeper is its operational requirements:  two classes of servers (with Zookeeper and without), potentially separate server instances running on Zookeeper-enabled servers, fast disk access required (according to the ZK operations manual, two fast disks -- one for logs, the other for … er..something else.)  That’s a significant increase in operational complexity for a product that is distributed to and maintained by clients.  That also means work necessary for us to make it as turnkey as possible.A Zookeeper-based solution would pick three or five nodes to be Zookeeper nodes as well as task nodes.  Ideally, for Zookeeper’s purposes, it’d be three dedicated servers, but that isn’t going to happen in our architecture.  So Zookeeper will have to coexist with the current app on servers where it’s installed.  For deployment simplicity, I’ll probably need to come up with a way to start up Zookeeper automatically when the server comes up on those nodes. Zookeeper used to not play well as an embedded app (according to some reports from the Katta project); that may be fixed now, but if not I may need to put that logic in the bootstrap script.</td>
+<td>The main downside for Zookeeper is its operational requirements:  two classes of servers (with Zookeeper and without), potentially separate server instances running on Zookeeper-enabled servers, fast disk access required (according to the ZK operations manual, two fast disks – one for logs, the other for … er..something else.)  That’s a significant increase in operational complexity for a product that is distributed to and maintained by clients.  That also means work necessary for us to make it as turnkey as possible.A Zookeeper-based solution would pick three or five nodes to be Zookeeper nodes as well as task nodes.  Ideally, for Zookeeper’s purposes, it’d be three dedicated servers, but that isn’t going to happen in our architecture.  So Zookeeper will have to coexist with the current app on servers where it’s installed.  For deployment simplicity, I’ll probably need to come up with a way to start up Zookeeper automatically when the server comes up on those nodes. Zookeeper used to not play well as an embedded app (according to some reports from the Katta project); that may be fixed now, but if not I may need to put that logic in the bootstrap script.</td>
 </tr>
 <tr>
 <td>Implementation Simplicity</td>
@@ -64,7 +64,7 @@ Zookeeper is designed for cluster coordination, and it’s well-thought-out.  I
 </tr>
 <tr>
 <td>Event bus</td>
-<td>Zookeeper doesn’t provide events...unless you write events directly to Zookeeper.  It could, however, obviate the need for a lot of events.  For example, we wouldn’t need a “task finished” event if all nodes just set watches on tasks...they’d be automatically notified.  Same with hearbeats, node failure, and so on -- they’d be taken care of by Zookeeper.</td>
+<td>Zookeeper doesn’t provide events...unless you write events directly to Zookeeper.  It could, however, obviate the need for a lot of events.  For example, we wouldn’t need a “task finished” event if all nodes just set watches on tasks...they’d be automatically notified.  Same with hearbeats, node failure, and so on – they’d be taken care of by Zookeeper.</td>
 </tr>
 </tbody>
 </table>
