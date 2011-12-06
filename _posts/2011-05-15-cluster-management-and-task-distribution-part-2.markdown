@@ -13,7 +13,7 @@ Which technology stack makes more sense for a distributed caching framework?
 
 <h2>The backstory</h2>
 
-I've gotten a fair amount of hits on <a href="http://matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">this post</a> comparing JGroups and Zookeeper for task distribution and cluster management. 
+I've gotten a fair amount of hits on <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">this post</a> comparing JGroups and Zookeeper for task distribution and cluster management. 
 I wanted to write an update of what I've investigated so far... unfortunately, my free time to investigate this specific issue has gone kapoof. Getting rid of the single point of failure in task distribution has gone on the backlog again. 
 
 However, in the meantime, I've done some investigation on distributed caches. This was the same app, but a different need – I needed a quick, practical way to distributed data across the cluster, so I tested Infinispan and Hazelcast. <br>
@@ -34,7 +34,7 @@ Three reasons:
 
 The first reason there is more significant than the other two. Terracotta may still end up as a distributed caching option in the future.
 
-Unfortunately, this isn't as in-depth or thorough of an investigation as <a href="http://matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">part 1</a>. I'm not going to go back through the requirements and then see how the candidates stack up. Infinispan and Hazelcast, our two main candidates, have a very similar feature list on paper, so it came down to a hands-on investigation instead. 
+Unfortunately, this isn't as in-depth or thorough of an investigation as <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">part 1</a>. I'm not going to go back through the requirements and then see how the candidates stack up. Infinispan and Hazelcast, our two main candidates, have a very similar feature list on paper, so it came down to a hands-on investigation instead. 
 
 <h2>The plan</h2>
 
