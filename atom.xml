@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[matt thinks so]]></title>
-  <link href="http://matthoffman.github.com/atom.xml" rel="self"/>
-  <link href="http://matthoffman.github.com/"/>
-  <updated>2012-10-08T03:58:32-04:00</updated>
-  <id>http://matthoffman.github.com/</id>
+  <link href="http://www.matt-thinks-so.com/atom.xml" rel="self"/>
+  <link href="http://www.matt-thinks-so.com/"/>
+  <updated>2012-10-08T04:12:46-04:00</updated>
+  <id>http://www.matt-thinks-so.com/</id>
   <author>
     <name><![CDATA[Matt Hoffman]]></name>
     
@@ -14,10 +14,30 @@
 
   
   <entry>
+    <title type="html"><![CDATA[On to Octopress]]></title>
+    <link href="http://www.matt-thinks-so.com/blog/2012/10/08/octopress/"/>
+    <updated>2012-10-08T03:59:00-04:00</updated>
+    <id>http://www.matt-thinks-so.com/blog/2012/10/08/octopress</id>
+    <content type="html"><![CDATA[<p>I’ve just switched the blog over to <a href="octopress.org">Octopress</a>.  I’ve been using vanilla <a href="https://github.com/mojombo/jekyll">Jekyll</a> for a while to keep up this blog, and I put a bit of effort into configuring it, building up a <a href="http://twitter.github.com/bootstrap/">Bootstrap</a>-based framework and so on. So, why switch? </p>
+
+<p>At the end of the day, this is a utilitarian site. I’m not going to impress anyone with my design chops – I enjoy graphic design in theory, and I’d like to think that I’m not the absolute worst at it, but I do little enough HTML these days that it takes a long time to get things done. And I’d rather put the time into writing actual content<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. Meanwhile, my site wasn’t displaying terribly well on phones, and Octopress handles mobile devices well out of the box.</p>
+
+<p>So, I’m trying it out.  I like it, so far. Thanks <a href="https://github.com/imathis/octopress">Brandon</a>! </p>
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>Not that, in practice, I’ve been writing actual content.<a href="#fnref:1" rel="reference">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[In Defense of Easy]]></title>
-    <link href="http://matthoffman.github.com/blog/2012/10/06/complexity/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2012/10/06/complexity/"/>
     <updated>2012-10-06T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2012/10/06/complexity</id>
+    <id>http://www.matt-thinks-so.com/blog/2012/10/06/complexity</id>
     <content type="html"><![CDATA[<h2 id="the-setup">the setup</h2>
 
 <p>I watched Rich Hickey’s talk from Strange Loop called <a href="http://www.infoq.com/presentations/Simple-Made-Easy">“Simple Made Easy”</a>, which has been making the rounds recently<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. He’s a great speaker, and always makes interesting points. But something in that talk didn’t sit right with me<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>. While his slide about Development Speed (“emphasizing ease gives early speed…ignoring complexity will slow you down over the long haul”) really struck a chord<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>, it felt like he was shortchanging “easy” in favor of “simple”<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup>.  This, then, is my long, somewhat circuitous exposition on that thought.</p>
@@ -175,12 +195,12 @@ In case you haven’t watched it, here’s the rough paraphrase of the definitio
   
   <entry>
     <title type="html"><![CDATA[Takes too long to build your project? Try harder.]]></title>
-    <link href="http://matthoffman.github.com/blog/2012/01/28/try-server/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2012/01/28/try-server/"/>
     <updated>2012-01-28T00:00:00-05:00</updated>
-    <id>http://matthoffman.github.com/blog/2012/01/28/try-server</id>
+    <id>http://www.matt-thinks-so.com/blog/2012/01/28/try-server</id>
     <content type="html"><![CDATA[<p>So, we have a problem at work. Well, more than one, perhaps…but one of them is that builds take too long. I’ve talked to folks I know in different places, and this is a pretty common complaint. But of course, <a href="http://www.youtube.com/watch?v=-eDaSvRO9xA">we have it tough</a>. We have a large codebase and a lot of tests. The compile time for the codebase is one issue; I’ll get to that in another blog post. But the test time is worse. </p>
 
-<div id="the-amazon-clouds" style="display:none; float:right" class="span4 offset4" onclick="$('div[id=the-amazon-clouds]').hide('fast')"><img src="http://matthoffman.github.com/images/carealot.gif" /></div>
+<div id="the-amazon-clouds" style="display:none; float:right" class="span4 offset4" onclick="$('div[id=the-amazon-clouds]').hide('fast')"><img src="http://www.matt-thinks-so.com/images/carealot.gif" /></div>
 
 <p>Most of our tests are proper unit tests: they test a single unit of code, mock out all components other than the one under test, and run quite quickly. But we have a significant minority of tests that go against a database, and the development databases live out on EC2 instances in the Amazon <a id="cloud-link" onclick="$(&quot;div[id=the-amazon-clouds]&quot;).show(&quot;fast&quot;);">clouds</a>. The time to run all pure unit tests across the project is pretty significant, but the time to run all the unit tests on a developer machine is untenable. Running tests for one module (out of 10 or so) takes half an hour when the code is on a developer’s machine and the development database is on an EC2 instance.  </p>
 
@@ -401,9 +421,9 @@ The build runs this script as its first step: </p>
   
   <entry>
     <title type="html"><![CDATA[Greasemonkey is Underrated]]></title>
-    <link href="http://matthoffman.github.com/blog/2012/01/24/greasemonkey/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2012/01/24/greasemonkey/"/>
     <updated>2012-01-24T00:00:00-05:00</updated>
-    <id>http://matthoffman.github.com/blog/2012/01/24/greasemonkey</id>
+    <id>http://www.matt-thinks-so.com/blog/2012/01/24/greasemonkey</id>
     <content type="html"><![CDATA[<p>I’ve heard about Greasemonkey a few times over the past few years.  I remember reading a few people wax eloquent about it, mainly how great it is for changing the layout of web pages (like a more convenient <a href="http://userscripts.org/scripts/show/101753">Youtube page</a>, or even changing <a href="http://userscripts.org/scripts/show/80853">Google News back to its old layout</a>). 
 And I remember the <a href="http://ejohn.org/blog/greasemonkey-security/">big security kerflaffle</a> a number of years ago (wow, 2005 – has it been that long?). 
 But I’d never had occasion to use it. </p>
@@ -428,12 +448,12 @@ fall, I was excited about doing some data science to help in the real estate sea
   
   <entry>
     <title type="html"><![CDATA[Cluster Management and Task Distribution, part 3]]></title>
-    <link href="http://matthoffman.github.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/"/>
     <updated>2011-11-05T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3</id>
+    <id>http://www.matt-thinks-so.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3</id>
     <content type="html"><![CDATA[<h2>Summary</h2>
 
-This is a followup to my <a href="http://matthoffman.github.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">Zookeeper vs. Jgroups </a>post, and the <a href="http://matthoffman.github.com/2011/05/15/cluster-management-and-task-distribution-part-2.html">Hazelcast addendum</a>.
+This is a followup to my <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">Zookeeper vs. Jgroups </a>post, and the <a href="http://www.matt-thinks-so.com/2011/05/15/cluster-management-and-task-distribution-part-2.html">Hazelcast addendum</a>.
 
 <p>I ended up needed caching before I needed cluster management, so after evaluating a few options I implemented a caching facade that could switch between Hazelcast and Infinispan (which is based on Jgroups).  I&#8217;ve been really impressed with Hazelcast so far – no major problems. We did hit a bug with 1.9.2, but found that a patch release with a fix was already out. 
 
@@ -461,7 +481,7 @@ But if our requirements were different, I think Zookeeper would have been my cho
 <li>If I owned installation and maintenance. The deployment complications of Zookeeper are one of the main downsides for our purpose; it&#8217;s another server to install and manage, which raises the operational footprint of our app. If we were running the app only within our own datacenter, no big deal – there are Puppet or Chef recipes to install it, and even pre-built EC2 images. That&#8217;s a very manageable hurdle. But we&#8217;re handing the app over to clients to install and manage, and Zookeeper adds more hardware requirements and an installation process that is good for at least a few more pages in the install guide. Hazelcast, on the other hand, adds just one line to a property file (cluster.nodes=x,y,z). Be kind to your ops teams.</li>
 </ul>
 
-There are probably also cases where JGroups is the right answer. It&#8217;s main advantage is its configurability – you can put together a nearly infinite combination of protocols stacks to suit various purposes. Check out the comments of <a href="http://matthoffman.github.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">my first post</a>, for example, for sample code to handle node discovery in a non-multicast (e.g. EC2) environment. But if all you need is cluster management and some pretty typical services on top of that, there are simpler options.
+There are probably also cases where JGroups is the right answer. It&#8217;s main advantage is its configurability – you can put together a nearly infinite combination of protocols stacks to suit various purposes. Check out the comments of <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">my first post</a>, for example, for sample code to handle node discovery in a non-multicast (e.g. EC2) environment. But if all you need is cluster management and some pretty typical services on top of that, there are simpler options.
 
 
 I&#8217;m going to be honest – after looking into Zookeeper closely, I&#8217;m looking for excuses to use it.  But I don&#8217;t think that will happen right away. 
@@ -471,9 +491,9 @@ I&#8217;m going to be honest – after looking into Zookeeper closely, I&#8217;m
   
   <entry>
     <title type="html"><![CDATA[Cluster Management and Task Distribution part 2: Caching]]></title>
-    <link href="http://matthoffman.github.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2/"/>
     <updated>2011-05-15T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2</id>
+    <id>http://www.matt-thinks-so.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2</id>
     <content type="html"><![CDATA[<h2>The question</h2>
 <p>Which technology stack makes more sense for a distributed caching framework?</p>
 
@@ -550,7 +570,7 @@ In my testing, it works out of the box and does what it’s supposed to.</p>
 
 <h2>Conclusion</h2>
 
-<p>I’ve split the conclusion into a separate post, <a href="http://matthoffman.github.com/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>.</p>
+<p>I’ve split the conclusion into a separate post, <a href="http://www.matt-thinks-so.com/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>.</p>
 
 <div class="footnotes">
   <ol>
@@ -564,9 +584,9 @@ In my testing, it works out of the box and does what it’s supposed to.</p>
   
   <entry>
     <title type="html"><![CDATA[Actors in Concurrency Terms]]></title>
-    <link href="http://matthoffman.github.com/blog/2011/03/12/actor-concurrency/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2011/03/12/actor-concurrency/"/>
     <updated>2011-03-12T00:00:00-05:00</updated>
-    <id>http://matthoffman.github.com/blog/2011/03/12/actor-concurrency</id>
+    <id>http://www.matt-thinks-so.com/blog/2011/03/12/actor-concurrency</id>
     <content type="html"><![CDATA[<h2 id="intro">Intro</h2>
 
 <p>There’s a lot of talk on the web about actors. And if you’ve followed very much of it at all – especially the back-and-forth on blogs about pros, cons, and whether actors are great/overhyped/not as useful as XYZ, and so on then this won’t be new to you. 
@@ -677,9 +697,9 @@ a.     If anyone has an already-written one out there, let me know, I’ve looke
   
   <entry>
     <title type="html"><![CDATA[Cluster Management and Task Distribution: Zookeeper vs. JGroups]]></title>
-    <link href="http://matthoffman.github.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/"/>
     <updated>2011-01-29T00:00:00-05:00</updated>
-    <id>http://matthoffman.github.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups</id>
+    <id>http://www.matt-thinks-so.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups</id>
     <content type="html"><![CDATA[<h2 id="internal-source-marker_0.6950423333328217">The question</h2>
 Which technology stack makes more sense for a distributed task-management framework?
 <h2>The backstory</h2>
@@ -782,15 +802,15 @@ With guaranteed message delivery, we could have consistent in-memory views of th
 </tbody>
 </table>
 <h2>Conclusion</h2>
-I have a followup post about Hazelcast <a href="http://matthoffman.github.com/2011/05/15/cluster-management-and-task-distribution-part-2.html">here</a>, and a brief conclusion <a href="http://matthoffman.github.com/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>. 
+I have a followup post about Hazelcast <a href="http://www.matt-thinks-so.com/2011/05/15/cluster-management-and-task-distribution-part-2.html">here</a>, and a brief conclusion <a href="http://www.matt-thinks-so.com/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>. 
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[On Configuration]]></title>
-    <link href="http://matthoffman.github.com/blog/2010/12/10/on-configuration/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2010/12/10/on-configuration/"/>
     <updated>2010-12-10T00:00:00-05:00</updated>
-    <id>http://matthoffman.github.com/blog/2010/12/10/on-configuration</id>
+    <id>http://www.matt-thinks-so.com/blog/2010/12/10/on-configuration</id>
     <content type="html"><![CDATA[I&#8217;ve been musing recently on how to scale our configuration system up and out: making it work more dynamically for single nodes, and handle multiple nodes&#8230;well, at all.
 <h2>How it works now</h2>
 Right now, our configuration is spread across the following places, roughly in order of precedence:
@@ -854,9 +874,9 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
   
   <entry>
     <title type="html"><![CDATA[Oh, Oracle]]></title>
-    <link href="http://matthoffman.github.com/blog/2010/03/05/oh-oracle/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2010/03/05/oh-oracle/"/>
     <updated>2010-03-05T00:00:00-05:00</updated>
-    <id>http://matthoffman.github.com/blog/2010/03/05/oh-oracle</id>
+    <id>http://www.matt-thinks-so.com/blog/2010/03/05/oh-oracle</id>
     <content type="html"><![CDATA[<p>So, I was responsible for a pretty unfortunate bug today — no way around it, I messed up.  It was classic — there was a &#8220;TODO&#8221; block where I meant to come back and finish some code, and no doubt got distracted by some very valid crisis. </p> 
 <p>Fortunately, it was caught before it affected production data, but it was in test, and visible, and it was scary that it had gotten that far.</p>
 <p>But I couldn&#8217;t help but be bitter about how that block of code came to be in the first place:  the code that contained the bug was part of an elaborate scheme designed to work around joining to a particularly large table in certain circumstances.</p>
@@ -868,9 +888,9 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
   
   <entry>
     <title type="html"><![CDATA[on the cusp of Big Data]]></title>
-    <link href="http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2009/12/19/on-the-cusp-of-big-data/"/>
     <updated>2009-12-19T00:00:00-05:00</updated>
-    <id>http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data</id>
+    <id>http://www.matt-thinks-so.com/blog/2009/12/19/on-the-cusp-of-big-data</id>
     <content type="html"><![CDATA[<i>Alternate title:</i> <b>Episode IV: A New Hope</b>
 
 <p>I&#8217;m restarting this blog after a long hiatus &#8211; a couple of years, at least.  It looks like my old posts were purged in the meantime, but that&#8217;s probably for the best<a name="to1" href="#1"><sup>1</sup></a>.  My musings about Hibernate from 2007 are probably not that interesting now<a name="to2" href="#2"><sup>2</sup></a>.</p>
@@ -888,9 +908,9 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
   
   <entry>
     <title type="html"><![CDATA[SSL curiosity]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/09/13/ssl-curiosity/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/09/13/ssl-curiosity/"/>
     <updated>2006-09-13T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/09/13/ssl-curiosity</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/09/13/ssl-curiosity</id>
     <content type="html"><![CDATA[<p>Ok, perhaps this isn’t a curiosity to you all.  Perhaps everyone knew this.  But I didn’t, and I didn’t find it in a quick Google search, so I thought I’d put it out here.    </p>
 
 <p>I’m working on a project that uses 2-way (client-auth) SSL; in doing so, I’ve created a test root CA and used it to generate an array of test certs for clients and servers. I’ve done a bit of testing on my local PC, and it’s working well; the server uses client certificates for authentication and authorization of web service requests, and so on. Acegi is our friend. </p>
@@ -905,9 +925,9 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
   
   <entry>
     <title type="html"><![CDATA[Another library]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/06/16/jamon/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/06/16/jamon/"/>
     <updated>2006-06-16T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/06/16/jamon</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/06/16/jamon</id>
     <content type="html"><![CDATA[<p>I’ve been teased that my current project has more external libraries than it does actual lines of code.  Now, I’m not convinced that’s a bad thing – I’ve said before that the hardest thing about leaving Java for some other language would be giving up all of the 3rd-party libraries and projects that do 90% of your work for you. </p>
 
 <p>Today’s is JAMon, a small library with a really simple purpose: keep track of performance statistics. I’ve written static classes or singletons that keep track of min, max and average times for various things on several projects; this just keeps me from having to write it again. Not saving a ton of time, but saving some. And <a href="http://iremia.univ-reunion.fr/intranet/wiki/Wiki.jsp?page=SpringJamon">here</a> is a simple step-by-step for integrating it into Spring as an interceptor. There are several discussions out there for how to use JAMon with Spring, and whether Spring’s built-in JAMon interceptor (is there anything Spring <em>doesn’t</em> have built in?) should use logging semantics to activate it, but the one above is simply the XML to cut and paste into Appfuse’s Spring config, which is all I really want. I understand what it does, it’s just saving me the five minutes of thinking about it.  Which is what I’m after.  It’s just a beautiful feeling when you want something done, no matter how small, and find that it’s already been done for you.  Like realizing you want another cup of coffee and finding a steaming mug already on your desk.</p>
@@ -918,9 +938,9 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
   
   <entry>
     <title type="html"><![CDATA[Perhaps I'm missing something...]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/05/19/axis2/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/05/19/axis2/"/>
     <updated>2006-05-19T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/05/19/axis2</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/05/19/axis2</id>
     <content type="html"><![CDATA[<p>I’ve been playing with Axis2 for a couple of days.  One of the features that they boast (and added to XFire’s <a href="http://xfire.codehaus.org/Stack+Comparison">SOAP Stack Comparison</a>) is hot-deployable services. </p>
 
 <p>Has anyone ever wanted to hot-deploy a web service? </p>
@@ -933,9 +953,9 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
   
   <entry>
     <title type="html"><![CDATA[For the record...]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/05/16/for-the-record/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/05/16/for-the-record/"/>
     <updated>2006-05-16T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/05/16/for-the-record</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/05/16/for-the-record</id>
     <content type="html"><![CDATA[<p>For the record, a custom STaX serializer and deserializer for a moderately small object graph will run you about 1000 lines of code. </p>
 
 <p>Just in case you were curious. </p>
@@ -950,9 +970,9 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
   
   <entry>
     <title type="html"><![CDATA[The Love-Hate of JiBX]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/05/01/the-love-hate-of-jibx/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/05/01/the-love-hate-of-jibx/"/>
     <updated>2006-05-01T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/05/01/the-love-hate-of-jibx</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/05/01/the-love-hate-of-jibx</id>
     <content type="html"><![CDATA[<p>Ok, I love JiBX’s flexibility.  I have two different versions of an existing schema that I’m mapping to the same Java object, which is the same Java object I’m then storing in Hibernate.  This is the first time I’ve been able to use the same domain object throughout the application, and I love it.  No more relying on framework-generated objects, and no more translation layers.</p>
 
 <p>Framework-generated objects are bad for my schemas, which have a lot of nested anonymous complex types (hey, I didn’t write them) which frameworks tend to handle badly.  XMLBeans, for instance, creates nested inner types, which gets very ugly.  It may be personal preference, but that seems very messy; it means one very large object. Hibernate, I imagine, would also be unhappy with that setup. </p>
@@ -971,7 +991,7 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 
 <p><i>Update, 2006-05-16:</i></p>
 
-<p>It didn’t stay around. In the end, expressing logic (“if this element… else if this element…”) in XML was too much. I moved over to a hand-rolled STaX serializer and deserializer – see <a href="http://matthoffman.github.com/2006/05/16/for-the-record.html">“for the record”</a> for a quick peek into the main downside there. </p>
+<p>It didn’t stay around. In the end, expressing logic (“if this element… else if this element…”) in XML was too much. I moved over to a hand-rolled STaX serializer and deserializer – see <a href="http://www.matt-thinks-so.com/2006/05/16/for-the-record.html">“for the record”</a> for a quick peek into the main downside there. </p>
 
 <p>Why I went this route instead of XMLBeans or JAXB merits more discussion.  Briefly, JAXB didn’t meet the performance requirements for this part of the system, and XMLBeans refuses to fully parse the schemas in question. It tries, but something in the deeply nested anonymous complex types gives it fits.  Writing code against those types as they’re generated in XMLBeans is also ugly, but then so is the custom parser. </p>
 

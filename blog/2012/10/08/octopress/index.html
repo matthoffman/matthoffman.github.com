@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>The Love-Hate of JiBX - matt thinks so</title>
+  <title>On to Octopress - matt thinks so</title>
   <meta name="author" content="Matt Hoffman">
 
   
-  <meta name="description" content="Ok, I love JiBX’s flexibility. I have two different versions of an existing schema that I’m mapping to the same Java object, which is the same Java &hellip;">
+  <meta name="description" content="I’ve just switched the blog over to Octopress. I’ve been using vanilla Jekyll for a while to keep up this blog, and I put a bit of effort into &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://www.matt-thinks-so.com/blog/2006/05/01/the-love-hate-of-jibx/">
+  <link rel="canonical" href="http://www.matt-thinks-so.com/blog/2012/10/08/octopress/">
   <link href="/favicon.ico" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -89,7 +89,7 @@
   
   <header>
     
-      <h1 class="entry-title">The Love-Hate of JiBX</h1>
+      <h1 class="entry-title">On to Octopress</h1>
     
     
       <p class="meta">
@@ -105,36 +105,25 @@
   
 
 
-<time datetime="2006-05-01T00:00:00-04:00" pubdate data-updated="true">May 1<span>st</span>, 2006</time>
+<time datetime="2012-10-08T03:59:00-04:00" pubdate data-updated="true">Oct 8<span>th</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>Ok, I love JiBX’s flexibility.  I have two different versions of an existing schema that I’m mapping to the same Java object, which is the same Java object I’m then storing in Hibernate.  This is the first time I’ve been able to use the same domain object throughout the application, and I love it.  No more relying on framework-generated objects, and no more translation layers.</p>
+<div class="entry-content"><p>I’ve just switched the blog over to <a href="octopress.org">Octopress</a>.  I’ve been using vanilla <a href="https://github.com/mojombo/jekyll">Jekyll</a> for a while to keep up this blog, and I put a bit of effort into configuring it, building up a <a href="http://twitter.github.com/bootstrap/">Bootstrap</a>-based framework and so on. So, why switch? </p>
 
-<p>Framework-generated objects are bad for my schemas, which have a lot of nested anonymous complex types (hey, I didn’t write them) which frameworks tend to handle badly.  XMLBeans, for instance, creates nested inner types, which gets very ugly.  It may be personal preference, but that seems very messy; it means one very large object. Hibernate, I imagine, would also be unhappy with that setup. </p>
+<p>At the end of the day, this is a utilitarian site. I’m not going to impress anyone with my design chops – I enjoy graphic design in theory, and I’d like to think that I’m not the absolute worst at it, but I do little enough HTML these days that it takes a long time to get things done. And I’d rather put the time into writing actual content<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. Meanwhile, my site wasn’t displaying terribly well on phones, and Octopress handles mobile devices well out of the box.</p>
 
-<p>So the alternative is a translation layer – a class that takes in a WebserviceFriendlyDomainObject and spits back a HibernateFriendlyDomainObject. This is a pain to write, but mostly just smells bad – it just shouldn’t be necessary.  I’ve done it as a workaround so far, but it seems like there should be a way around it.</p>
-
-<p>JiBX lets me use the same object from front to back. But that brings me to one of the hates – I have to write a JiBX binding file instead.  It’s funny, because for whatever reason this passes under the “ugly architecture” radar, but it’s actually not much different than writing a translation layer. It’s just writing your translation layer in XML instead of in Java. Which, if anything, simply adds difficulty, because I find myself trying to do complex logic in the binding file that could really benefit from a Turing-complete language. Which is ironic, since I’m writing it to save me from writing the same thing in Java. </p>
-
-<p>Now, it’s still a bit better than a translation layer. The typical translator is converting one object to another object to be turned into XML. The JiBX binding is going straight to XML. It’s certainly faster than the translation step. But from the coder’s point of view, the XMLBeans-generated domain object is one method call away from being XML, so it doesn’t <i>feel</i> substantially different.</p>
-
-<p>My other complaint about JiBX so far is web service support – it’s pretty new, and support in Axis2 (another topic entirely) and XFire is either brand-new or still in CVS.  I’m finding that my data binding layer is informing my choice in web service stacks, which I resent.  I haven’t tried XFire’s JiBX support yet (since Codehaus’s SVN server is down) but they were planning on getting it into 1.1 and it didn’t make it, which isn’t a good sign. </p>
-
-<p>The annoyances of bytecode manipulation are already documented elsewhere; I’ve found that every now and again I have to run an ant task that inserts the JiBX bindings into Eclipse’s class files, and that’s the extent of it. It irks some of people, but doesn’t bother me. </p>
-
-<p>So I’m not sure if JiBX will stay around in this project. That’s in spite of substantial positives – at this point, it could easily fall either way. </p>
-
-<p><i>Update, 2006-05-16:</i></p>
-
-<p>It didn’t stay around. In the end, expressing logic (“if this element… else if this element…”) in XML was too much. I moved over to a hand-rolled STaX serializer and deserializer – see <a href="/2006/05/16/for-the-record.html">“for the record”</a> for a quick peek into the main downside there. </p>
-
-<p>Why I went this route instead of XMLBeans or JAXB merits more discussion.  Briefly, JAXB didn’t meet the performance requirements for this part of the system, and XMLBeans refuses to fully parse the schemas in question. It tries, but something in the deeply nested anonymous complex types gives it fits.  Writing code against those types as they’re generated in XMLBeans is also ugly, but then so is the custom parser. </p>
-
-<p>All in all, I’m coming to terms with the translation layer. But it still feels like it oughtn’t be necessary…  </p>
+<p>So, I’m trying it out.  I like it, so far. Thanks <a href="https://github.com/imathis/octopress">Brandon</a>! </p>
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>Not that, in practice, I’ve been writing actual content.<a href="#fnref:1" rel="reference">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
 </div>
 
 
@@ -157,21 +146,15 @@
   
 
 
-<time datetime="2006-05-01T00:00:00-04:00" pubdate data-updated="true">May 1<span>st</span>, 2006</time>
+<time datetime="2012-10-08T03:59:00-04:00" pubdate data-updated="true">Oct 8<span>th</span>, 2012</time>
       
-
-<span class="categories">
-  
-    <a class='category' href='/blog/categories/old/'>old</a>
-  
-</span>
 
 
     </p>
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://www.matt-thinks-so.com/blog/2006/05/01/the-love-hate-of-jibx/" data-via="matt_thinks_so" data-counturl="http://www.matt-thinks-so.com/blog/2006/05/01/the-love-hate-of-jibx/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://www.matt-thinks-so.com/blog/2012/10/08/octopress/" data-via="matt_thinks_so" data-counturl="http://www.matt-thinks-so.com/blog/2012/10/08/octopress/" >Tweet</a>
   
   
   
@@ -180,12 +163,18 @@
     
     <p class="meta">
       
+        <a class="basic-alignment left" href="/blog/2012/10/06/complexity/" title="Previous Post: In Defense of Easy">&laquo; In Defense of Easy</a>
       
-        <a class="basic-alignment right" href="/blog/2006/05/16/for-the-record/" title="Next Post: For the record...">For the record... &raquo;</a>
       
     </p>
   </footer>
 </article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
 
 </div>
 
@@ -286,7 +275,10 @@
       var disqus_shortname = 'mattthinksso';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://www.matt-thinks-so.com/blog/2012/10/08/octopress/';
+        var disqus_url = 'http://www.matt-thinks-so.com/blog/2012/10/08/octopress/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

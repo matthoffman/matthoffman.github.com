@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: old | matt thinks so]]></title>
-  <link href="http://matthoffman.github.com/blog/categories/old/atom.xml" rel="self"/>
-  <link href="http://matthoffman.github.com/"/>
-  <updated>2012-10-08T03:58:32-04:00</updated>
-  <id>http://matthoffman.github.com/</id>
+  <link href="http://www.matt-thinks-so.com/blog/categories/old/atom.xml" rel="self"/>
+  <link href="http://www.matt-thinks-so.com/"/>
+  <updated>2012-10-08T04:12:46-04:00</updated>
+  <id>http://www.matt-thinks-so.com/</id>
   <author>
     <name><![CDATA[Matt Hoffman]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[SSL curiosity]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/09/13/ssl-curiosity/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/09/13/ssl-curiosity/"/>
     <updated>2006-09-13T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/09/13/ssl-curiosity</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/09/13/ssl-curiosity</id>
     <content type="html"><![CDATA[<p>Ok, perhaps this isn’t a curiosity to you all.  Perhaps everyone knew this.  But I didn’t, and I didn’t find it in a quick Google search, so I thought I’d put it out here.    </p>
 
 <p>I’m working on a project that uses 2-way (client-auth) SSL; in doing so, I’ve created a test root CA and used it to generate an array of test certs for clients and servers. I’ve done a bit of testing on my local PC, and it’s working well; the server uses client certificates for authentication and authorization of web service requests, and so on. Acegi is our friend. </p>
@@ -32,9 +32,9 @@
   
   <entry>
     <title type="html"><![CDATA[Another library]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/06/16/jamon/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/06/16/jamon/"/>
     <updated>2006-06-16T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/06/16/jamon</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/06/16/jamon</id>
     <content type="html"><![CDATA[<p>I’ve been teased that my current project has more external libraries than it does actual lines of code.  Now, I’m not convinced that’s a bad thing – I’ve said before that the hardest thing about leaving Java for some other language would be giving up all of the 3rd-party libraries and projects that do 90% of your work for you. </p>
 
 <p>Today’s is JAMon, a small library with a really simple purpose: keep track of performance statistics. I’ve written static classes or singletons that keep track of min, max and average times for various things on several projects; this just keeps me from having to write it again. Not saving a ton of time, but saving some. And <a href="http://iremia.univ-reunion.fr/intranet/wiki/Wiki.jsp?page=SpringJamon">here</a> is a simple step-by-step for integrating it into Spring as an interceptor. There are several discussions out there for how to use JAMon with Spring, and whether Spring’s built-in JAMon interceptor (is there anything Spring <em>doesn’t</em> have built in?) should use logging semantics to activate it, but the one above is simply the XML to cut and paste into Appfuse’s Spring config, which is all I really want. I understand what it does, it’s just saving me the five minutes of thinking about it.  Which is what I’m after.  It’s just a beautiful feeling when you want something done, no matter how small, and find that it’s already been done for you.  Like realizing you want another cup of coffee and finding a steaming mug already on your desk.</p>
@@ -45,9 +45,9 @@
   
   <entry>
     <title type="html"><![CDATA[Perhaps I'm missing something...]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/05/19/axis2/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/05/19/axis2/"/>
     <updated>2006-05-19T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/05/19/axis2</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/05/19/axis2</id>
     <content type="html"><![CDATA[<p>I’ve been playing with Axis2 for a couple of days.  One of the features that they boast (and added to XFire’s <a href="http://xfire.codehaus.org/Stack+Comparison">SOAP Stack Comparison</a>) is hot-deployable services. </p>
 
 <p>Has anyone ever wanted to hot-deploy a web service? </p>
@@ -60,9 +60,9 @@
   
   <entry>
     <title type="html"><![CDATA[For the record...]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/05/16/for-the-record/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/05/16/for-the-record/"/>
     <updated>2006-05-16T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/05/16/for-the-record</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/05/16/for-the-record</id>
     <content type="html"><![CDATA[<p>For the record, a custom STaX serializer and deserializer for a moderately small object graph will run you about 1000 lines of code. </p>
 
 <p>Just in case you were curious. </p>
@@ -77,9 +77,9 @@
   
   <entry>
     <title type="html"><![CDATA[The Love-Hate of JiBX]]></title>
-    <link href="http://matthoffman.github.com/blog/2006/05/01/the-love-hate-of-jibx/"/>
+    <link href="http://www.matt-thinks-so.com/blog/2006/05/01/the-love-hate-of-jibx/"/>
     <updated>2006-05-01T00:00:00-04:00</updated>
-    <id>http://matthoffman.github.com/blog/2006/05/01/the-love-hate-of-jibx</id>
+    <id>http://www.matt-thinks-so.com/blog/2006/05/01/the-love-hate-of-jibx</id>
     <content type="html"><![CDATA[<p>Ok, I love JiBX’s flexibility.  I have two different versions of an existing schema that I’m mapping to the same Java object, which is the same Java object I’m then storing in Hibernate.  This is the first time I’ve been able to use the same domain object throughout the application, and I love it.  No more relying on framework-generated objects, and no more translation layers.</p>
 
 <p>Framework-generated objects are bad for my schemas, which have a lot of nested anonymous complex types (hey, I didn’t write them) which frameworks tend to handle badly.  XMLBeans, for instance, creates nested inner types, which gets very ugly.  It may be personal preference, but that seems very messy; it means one very large object. Hibernate, I imagine, would also be unhappy with that setup. </p>
