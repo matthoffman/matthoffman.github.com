@@ -2,41 +2,65 @@
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
         <loc>http://matthoffman.github.com/blog/2006/05/01/the-love-hate-of-jibx/</loc>
-        <lastmod>2012-10-07T15:11:00-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>http://matthoffman.github.com/blog/2006/05/16/for-the-record/</loc>
-        <lastmod>2012-10-07T15:11:00-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>http://matthoffman.github.com/blog/2006/05/19/axis2/</loc>
-        <lastmod>2012-10-07T15:11:00-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>http://matthoffman.github.com/blog/2006/06/16/jamon/</loc>
-        <lastmod>2012-10-07T15:11:00-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>http://matthoffman.github.com/blog/2006/09/13/ssl-curiosity/</loc>
-        <lastmod>2012-10-07T15:11:00-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data/</loc>
-        <lastmod>2012-10-07T15:11:00-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>http://matthoffman.github.com/blog/2010/03/05/oh-oracle/</loc>
-        <lastmod>2012-10-07T15:11:00-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>http://matthoffman.github.com/blog/2010/12/10/on-configuration/</loc>
-        <lastmod>2012-10-07T15:11:00-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>
             http://matthoffman.github.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/
         </loc>
-        <lastmod>2012-10-07T15:11:00-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
+    </url>
+    <url>
+        <loc>http://matthoffman.github.com/blog/2011/03/12/actor-concurrency/</loc>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://matthoffman.github.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2/
+        </loc>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
+    </url>
+    <url>
+        <loc>
+            http://matthoffman.github.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/
+        </loc>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
+    </url>
+    <url>
+        <loc>http://matthoffman.github.com/blog/2012/01/24/greasemonkey/</loc>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
+    </url>
+    <url>
+        <loc>http://matthoffman.github.com/blog/2012/01/28/try-server/</loc>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>http://matthoffman.github.com/blog/2012/10/06/complexity/</loc>
@@ -48,10 +72,10 @@
     </url>
     <url>
         <loc>http://matthoffman.github.com/blog/archives/</loc>
-        <lastmod>2012-10-08T03:41:27-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
     <url>
         <loc>http://matthoffman.github.com/</loc>
-        <lastmod>2012-10-08T03:41:27-04:00</lastmod>
+        <lastmod>2012-10-08T03:55:16-04:00</lastmod>
     </url>
 </urlset>

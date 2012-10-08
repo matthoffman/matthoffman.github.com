@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>on the cusp of Big Data - matt thinks so</title>
+  <title>Greasemonkey is Underrated - matt thinks so</title>
   <meta name="author" content="Matt Hoffman">
 
   
-  <meta name="description" content="Alternate title: Episode IV: A New Hope I&#8217;m restarting this blog after a long hiatus &#8211; a couple of years, at least. It looks like my old &hellip;">
+  <meta name="description" content="I’ve heard about Greasemonkey a few times over the past few years. I remember reading a few people wax eloquent about it, mainly how great it is for &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data/">
+  <link rel="canonical" href="http://matthoffman.github.com/blog/2012/01/24/greasemonkey/">
   <link href="/favicon.ico" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -89,7 +89,7 @@
   
   <header>
     
-      <h1 class="entry-title">On the Cusp of Big Data</h1>
+      <h1 class="entry-title">Greasemonkey Is Underrated</h1>
     
     
       <p class="meta">
@@ -105,25 +105,32 @@
   
 
 
-<time datetime="2009-12-19T00:00:00-05:00" pubdate data-updated="true">Dec 19<span>th</span>, 2009</time>
+<time datetime="2012-01-24T00:00:00-05:00" pubdate data-updated="true">Jan 24<span>th</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><i>Alternate title:</i> <b>Episode IV: A New Hope</b>
+<div class="entry-content"><p>I’ve heard about Greasemonkey a few times over the past few years.  I remember reading a few people wax eloquent about it, mainly how great it is for changing the layout of web pages (like a more convenient <a href="http://userscripts.org/scripts/show/101753">Youtube page</a>, or even changing <a href="http://userscripts.org/scripts/show/80853">Google News back to its old layout</a>). 
+And I remember the <a href="http://ejohn.org/blog/greasemonkey-security/">big security kerflaffle</a> a number of years ago (wow, 2005 – has it been that long?). 
+But I’d never had occasion to use it. </p>
 
-<p>I&#8217;m restarting this blog after a long hiatus &#8211; a couple of years, at least.  It looks like my old posts were purged in the meantime, but that&#8217;s probably for the best<a name="to1" href="#1"><sup>1</sup></a>.  My musings about Hibernate from 2007 are probably not that interesting now<a name="to2" href="#2"><sup>2</sup></a>.</p>
-<p>Where I&#8217;m coming from:</p>
-<p>I work on a team that, in a lot of ways, is on the cusp of Big Data:  we deal with gigabytes, but not terabytes of data, and we don&#8217;t have endless racks of commodity servers.  We have a homegrown task framework that follows a typical master-worker pattern and allows for tasks to be distributed among nodes on different servers.  That works well, and I like the framework in general &#8211; it could use some cleaning up, but it&#8217;s simple, clean and functional.</p>
-<p>Data, though, is all stored inside an Oracle database, and we&#8217;re knocking at the edge of it&#8217;s capabilities.  We haven&#8217;t entirely maxed it out yet, but each performance gain has been harder to come by, and we can easily see the time approaching where it will be cheaper to rearchitect how we&#8217;re storing and serving data rather than eke more performance by smarter partitioning, better queries, or a faster SAN.</p>
-<p>So over the past several months I&#8217;ve been reading about some of the competitors in the big-data field, and sketching ideas for what I&#8217;d like our architecture to look like going forward.  Things like MapReduce (Hadoop), HBase, Cassandra, or Terracotta, or a number of other ideas &#8211; different types of products, all with the goal of scaling data beyond a single server.  But unlike a lot of folks looking at these options, we have an existing product in production, based on a framework that does 80% of what we need.  So I find myself on a seesaw, going between the newest, coolest thing I&#8217;ve read about, and then the pain of rewriting what we have on a non-existent timeline when what we have works so well &#8211; at today&#8217;s data volumes.</p>
-<p>I decided to reinstate this blog to collect what I&#8217;ve learned so far.</p>
-<p/>
-<p/>
-<p><a name="1" href="#to1"><sup>1</sup></a> Does anyone else have the problem of starting blogs like new years&#8217; resolutions and then losing track of them?  I probably have three out there, tied to some forgotten username on goodness knows which host, and they&#8217;re probably saying very insightful things about Hibernate 2.0.</p>
-<p><a name="2" href="#to2"><sup>2</sup></a> Turns out, I did recover some old posts from a Typo blog from 2006.  A couple of the most boring just didn&#8217;t make the move over, but most of them are here for morbid curiosity about what seemed interesting at the time.</p>
+<p>But when I started browsing real estate listings in earnest, I got my excuse. I like <a href="www.zillow.com">Zillow</a> and <a href="www.trulia.com">Trulia</a>, but the realtor I am working with has a website of his own that he prefers – clients can save listings as “favorites” and “possibilities”, make notes, and he can make notes or suggestions in return…which makes good sense. But the site is no Zillow or Trulia: it displays far less data, it’s a bit slow, and it’s fixed at 10 results per page. And when there’s over 100 listing my price range to sort through, every little bit helps. </p>
+
+<p>Greasemonkey can’t help the site speed, but I’ve made some inroads on how much data it displays. 
+I hacked up a little Greaseonkey script that runs in Firefox everytime I load the realtor’s search page. The script just goes through each listing and fires off a query to the Zillow API, returning Zillow’s value estimate, the historical min and max value of the house, and a direct link to the listing’s page on Zillow. I may add a couple other things, like tax value and last sold date (is it a flip?). I was excited about adding some neighborhood statistics, too, but unfortunately Zillow doesn’t have neighborhood data for my area.   </p>
+
+<p>Up next: look into the Trulia’s API (I haven’t checked if they have neighborhood information) and maybe Walkscore, Panoramio and Flickr (for neighborhood pictures). 
+After that, some Google Map hacks…but that’s a bit more involved.</p>
+
+<p>If anyone else is considering pimping their webpages – I highly recommend it – I recommend Mark Pilgrim’s <a href="http://commons.oreilly.com/wiki/index.php/Greasemonkey_Hacks/Getting_Started">Greasemonkey Hacks</a>. I heard some disparaging comments about the docs for Greasemonkey, but that page is great. Several of the other docs on <a href="&quot;http://wiki.greasespot.net/Main_Page}">Greasespot’s wiki</a> are worth reading as well. Those of us that are only passable Javascript programmers can be confused by Greasemonkey’s weird sandbox environment, so the documentation is necessary (objects in Greasemonkey are all wrapped with XPCNativeWrappers for security, in response to the security issues from 2005…). I don’t know if it’s mentioned in the documentation, but the newest Greasemonkey version has a “create a new script” menu action that makes getting started dead easy. </p>
+
+<p>As an aside, I have to say that after taking the Stanford’s online <a href="ml-class.org">Machine Learning class</a> this past 
+fall, I was excited about doing some data science to help in the real estate search (“how does the addition of light rail affect nearby housing prices?”). Predicting home prices was actually one of the driving examples through the class. But I’ve been disappointed in how difficult it is to be to get access to large sets of real estate data in the US.  I guess I naïvely thought that since tax valuations and home sales are public record, there’d be a way to access a sizeable dataset. If it’s out there, I haven’t found it. And the listings themselves are almost all closed, living inside each area’s version of the MLS. The closest thing I’ve found are the API’s offered by Zillow and Trulia, but at least Zillow’s terms of service prevent you from storing their service responses locally, and they don’t return MLS results (i.e. most results added by real estate agents) in their search results via the API…you have to ask for the properties individually. </p>
+
+<p>So I’ll have to play around with big data in other ways… </p>
+
 </div>
 
 
@@ -146,7 +153,7 @@
   
 
 
-<time datetime="2009-12-19T00:00:00-05:00" pubdate data-updated="true">Dec 19<span>th</span>, 2009</time>
+<time datetime="2012-01-24T00:00:00-05:00" pubdate data-updated="true">Jan 24<span>th</span>, 2012</time>
       
 
 
@@ -154,7 +161,7 @@
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data/" data-via="matt_thinks_so" data-counturl="http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://matthoffman.github.com/blog/2012/01/24/greasemonkey/" data-via="matt_thinks_so" data-counturl="http://matthoffman.github.com/blog/2012/01/24/greasemonkey/" >Tweet</a>
   
   
   
@@ -163,10 +170,10 @@
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2006/09/13/ssl-curiosity/" title="Previous Post: SSL curiosity">&laquo; SSL curiosity</a>
+        <a class="basic-alignment left" href="/blog/2011/11/05/cluster-management-and-task-distribution-part-3/" title="Previous Post: Cluster Management and Task Distribution, part 3">&laquo; Cluster Management and Task Distribution, part 3</a>
       
       
-        <a class="basic-alignment right" href="/blog/2010/03/05/oh-oracle/" title="Next Post: Oh, Oracle">Oh, Oracle &raquo;</a>
+        <a class="basic-alignment right" href="/blog/2012/01/28/try-server/" title="Next Post: Takes too long to build your project? Try harder.">Takes too long to build your project? Try harder. &raquo;</a>
       
     </p>
   </footer>

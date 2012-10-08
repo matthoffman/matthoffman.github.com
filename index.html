@@ -279,6 +279,643 @@ In case you haven’t watched it, here’s the rough paraphrase of the definitio
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2012/01/28/try-server/">Takes Too Long to Build Your Project? Try Harder.</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-28T00:00:00-05:00" pubdate data-updated="true">Jan 28<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>So, we have a problem at work. Well, more than one, perhaps…but one of them is that builds take too long. I’ve talked to folks I know in different places, and this is a pretty common complaint. But of course, <a href="http://www.youtube.com/watch?v=-eDaSvRO9xA">we have it tough</a>. We have a large codebase and a lot of tests. The compile time for the codebase is one issue; I’ll get to that in another blog post. But the test time is worse. </p>
+
+<div id="the-amazon-clouds" style="display:none; float:right" class="span4 offset4" onclick="$('div[id=the-amazon-clouds]').hide('fast')"><img src="/images/carealot.gif" /></div>
+
+<p>Most of our tests are proper unit tests: they test a single unit of code, mock out all components other than the one under test, and run quite quickly. But we have a significant minority of tests that go against a database, and the development databases live out on EC2 instances in the Amazon <a id="cloud-link" onclick="$(&quot;div[id=the-amazon-clouds]&quot;).show(&quot;fast&quot;);">clouds</a>. The time to run all pure unit tests across the project is pretty significant, but the time to run all the unit tests on a developer machine is untenable. Running tests for one module (out of 10 or so) takes half an hour when the code is on a developer’s machine and the development database is on an EC2 instance.  </p>
+
+<p>Whoa, hold on there – I can hear some of you now: “Tests that go against the database!? Those aren’t unit tests! Unit tests CAN’T TOUCH ANYTHING! AT ALL!” Ok, fine. They’re not unit tests. Call them integration tests. Call them whatever you want. The fact remains, there is logic contained in the DAO layer, and in the queries themselves (some of the SQL queries are substantially complicated). Somehow or other, that logic needs to be tested. </p>
+
+<p>So, there are a few options I know of: </p>
+
+<h3 id="mock-out-the-database-itself">Mock out the database itself</h3>
+
+<p>This would have to be a complete enough fake-database that we could test the queries themselves and catch unbound bind variables, bad column names, and things like that, while retaining full Oracle compatibility. I haven’t seen anything that actually does this, but if you know of it, let me know. In-memory databases like H2 are <a href="http://martinfowler.com/bliki/InMemoryTestDatabase.html">often used as a substitute for the database while testing</a>, but they don’t work for us because we use a lot of Oracle-specific SQL extensions (partition clauses, SQL hints, and so on). Even Oracle’s own TimesTen database doesn’t support these, unfortunately. If they did work, they’d be a nice option, though.</p>
+
+<h3 id="cut-and-run-mock-out-as-much-db-interaction-as-possible-and-put-the-tests-that-do-hit-the-db-in-a-separate-group-that-run-only-occasionally">Cut and run: Mock out as much DB interaction as possible, and put the tests that do hit the DB in a separate group that run only occasionally.</h3>
+
+<p>We tried this first. I created a Maven profile, so that adding <code>-P quick</code> to the Maven command line skips all the database tests. I could have done it the other way around, so that you had to add a profile to run the database tests, but I was afraid we’d never run them. I had nightmares of folks setting up CI jobs for a new branch and forgetting to add the magic “run the database tests, too” parameter, and not seeing database-related errors until it got out onto a server. Yes, we have a QA process after unit tests, but if a bug makes it to that layer, it’s made it too far; it’s holding up other testing. I may still move the tests that hit the database into the <a href="http://stackoverflow.com/questions/1228709/best-practices-for-integration-tests-with-maven">integration-test phase</a>, but that feels like a hack; they’re not really integration tests.</p>
+
+<p>There’s also something that makes me uncomfortable when there is a disincentive to writing tests. In an ideal world, we’d be able to say, “Write all the tests you want. Load all the test data you need. We’ll run them.” So the “quick” profile was OK, but I knew we could do better. And it just happened that, elsewhere in the company, some folks were working on another project:</p>
+
+<h3 id="move-the-data-to-the-computation">Move the data to the computation.</h3>
+
+<p>The team that maintains the development databases created a VirtualBox image of a database server, so that developers could run it locally. No more network lag, and much faster tests (about 2x faster, in early benchmarks). But there were some problems: developer laptops are only so fast, and they have only so memory. I’d love to say that each devleper could have a separate desktop workstation to use as a development database, but unfortunately the budget isn’t there. And while we have 8gb of RAM on our Macbooks, after running a local version of our app, some development tools, and Firefox, we’re often hitting swap space. So… the dev VM is less than ideal. If I could get 16gb of RAM on my machine, then I’d be in business. But the ops team balked at that. Something about not being officially supported by Apple. So that leads us to…</p>
+
+<h3 id="move-the-computation-to-the-data">Move the computation to the data</h3>
+
+<p>Hadoop does it, why can’t I?  I think the first few options have a lot going for them, and are probably enough for a lot of environments. But if software gets big enough, there’s always going to be a point where the tests take too long to run locally. And as fast as your development machine is, you can always get a cluster of build servers that are faster. And that’s probably always going to be more economical than giving each developer a beefy PC. So it’s not hard to imagine eventually wanting to do your test builds out on the CI machine. </p>
+
+<p>We use Hudson…er… Jenkins as a CI server already; it builds the proejct after each checkin. So all we needed was a way to make it build the project BEFORE a checkin – what a lot of people call a “try” server (as in, “try it before you commit it”). </p>
+
+<p>I did a bit of searching, and a lot of smart people have solved this problem already: 
+Etsy, for example, <a href="http://codeascraft.etsy.com/2011/10/11/did-you-try-it-before-you-committed/">uses Jenkins as a “try” server</a>. Their solution is clean and simple: just send the diff of your code against master, and Jenkins will apply the diff, compile, and build. Nice. Most other solutions seem to take similar approaches: <a href="https://wiki.mozilla.org/ReleaseEngineering/TryServer">Mozilla</a>, <a href="http://buildbot.net/buildbot/docs/0.8.4/try.html">buildbot</a> (used by the <a href="http://www.chromium.org/developers/testing/try-server-usage">Chromium project</a>, among others)… and so on. </p>
+
+<p>Unfortunately, we have a lot of modules and a lot of branches. The branches are unavoidable – we support a number of clients. The number of modules…well, that my fault. I split the software into a lot of modules several years ago to try to encourage code reuse between projects, but the cost has been much higher than the benefit. Unfortunately, it’s now costly to merge things back together – but that’s another post for another time.</p>
+
+<p>So, rather than setting up one “try” build per branch per module, doubling the number of CI jobs, I opted to do things differently.  I created a “try.sh” script that runs the “compile” and “package” portions of the build, skipping tests, and then sends the compiled classes and test classes over to Jenkins. The Jenkins job just unpackages the classes and runs the enclosed tests. </p>
+
+<p>The Jenkins job, in this scenario, is entirely generic – it knows nothing about the code its testing. It doesn’t connect to source control at all. It doesn’t even see the source – we’re sending it compiled class files, and it’s just running the tests. </p>
+
+<p>Is this the right solution for you?  Perhaps, if your constraints are similar to ours. Read the Etsy post linked above, and see if that solution seems simpler: it may well be. If you want to set up something like we did, read on. </p>
+
+<p>I’ll say upfront that this method has some disadvantages. The main disadvantage is that it’s slower. The traditional try server does a diff of your local code vs. the mainline, then sends that diff up to the server and applies it, then runs the build and tests up on the server. So all that goes over the wire is your diff, and all your machine has to do is diff the code – all building is done on the CI server. </p>
+
+<p>My approach, instead, does the building on your local machine, and sends the artifacts to the CI server. This is a compromise: your machine may or may not build faster than the CI server (probably not) but the artifacts are likely a larger upload. So, if in doubt, try it out and see if it works for you. </p>
+
+<p>Setting it up is easy. Since we use Maven, we just have to make sure each of our Maven builds creates a test-jar: </p>
+
+<pre class="brush: xml">
+    &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-jar-plugin&lt;/artifactId&gt;
+                &lt;version&gt;2.3.2&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;archive&gt;
+                        &lt;manifest&gt;
+                            &lt;addClasspath&gt;true&lt;/addClasspath&gt;
+                            &lt;addDefaultSpecificationEntries&gt;true&lt;/addDefaultSpecificationEntries&gt;
+                            &lt;packageName&gt;${project.groupId}&lt;/packageName&gt;
+                        &lt;/manifest&gt;
+                        &lt;manifestEntries&gt;
+                            &lt;url&gt;${project.url}&lt;/url&gt;
+                            &lt;Implementation-Title&gt;${project.name}&lt;/Implementation-Title&gt;
+                            &lt;Implementation-Version&gt;${project.version}-${buildNumber}&lt;/Implementation-Version&gt;
+                            &lt;Implementation-Vendor-Id&gt;${project.groupId}&lt;/Implementation-Vendor-Id&gt;
+                            &lt;Implementation-Vendor&gt;${project.organization.name}&lt;/Implementation-Vendor&gt;
+                        &lt;/manifestEntries&gt;
+                    &lt;/archive&gt;
+                &lt;/configuration&gt;
+                &lt;executions&gt;
+                    &lt;execution&gt;
+                        &lt;id&gt;jar&lt;/id&gt;
+                        &lt;phase&gt;package&lt;/phase&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;jar&lt;/goal&gt;
+                        &lt;/goals&gt;
+                    &lt;/execution&gt;
+                    &lt;execution&gt;
+                        &lt;id&gt;test-jar&lt;/id&gt;
+                        &lt;phase&gt;test&lt;/phase&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;test-jar&lt;/goal&gt;
+                        &lt;/goals&gt;
+                    &lt;/execution&gt;
+                    &lt;execution&gt;
+                        &lt;id&gt;source-jar&lt;/id&gt;
+                        &lt;phase&gt;test&lt;/phase&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;jar&lt;/goal&gt;
+                        &lt;/goals&gt;
+                        &lt;configuration&gt;
+                            &lt;classesDirectory&gt;src/main/java&lt;/classesDirectory&gt;
+                            &lt;classifier&gt;sources&lt;/classifier&gt;
+                        &lt;/configuration&gt;
+                    &lt;/execution&gt;
+                    &lt;execution&gt;
+                        &lt;id&gt;test-source-jar&lt;/id&gt;
+                        &lt;phase&gt;test&lt;/phase&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;jar&lt;/goal&gt;
+                        &lt;/goals&gt;
+                        &lt;configuration&gt;
+                            &lt;classesDirectory&gt;src/test/java&lt;/classesDirectory&gt;
+                            &lt;classifier&gt;tests-sources&lt;/classifier&gt;
+                        &lt;/configuration&gt;
+                    &lt;/execution&gt;
+                &lt;/executions&gt;
+   &lt;/plugin&gt;
+</pre>
+
+<p>That snippet is in a parent pom, so that’s taken care of for all of our projects. </p>
+
+<p>The try.sh script looks like this, currently. It could be a lot prettier, but this was the relatively quick-n’-dirty experiment: </p>
+
+<pre class="brush: bash">
+    #!/bin/sh 
+    
+    ###############################################################################
+    # try.sh
+    # 
+    # The idea behind this script is to build and package up your project locally, 
+    # then send the code (the classes and the test classes) to the Jenkins server
+    # to be executed there. 
+    # This relies on the build being configured to generate a "test-jar" artifact
+    # It has some limitations: 
+    #   * You're not going to have exactly the same classpath (yet)
+    #   * It can't handle multi-module projects (yet)
+    #   * You can't add Maven profiles to the build (yet)
+    ###############################################################################
+    
+    set -u   # fail on unitialized variable
+    set -e   # fail if any command exits with a non-zero status
+    
+    # Find our local directory, so we can locate the wait-and-notify.sh script later
+    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &amp;&amp; pwd )"
+    
+    JENKINS_HOST=your_build_server_here
+    JENKINS_HTTP_PORT=7700
+    # This is set in Jenkins' configuration; you probably have to configure Jenkins to have a static port. By default it changes every restart.
+    JENKINS_SSH_PORT=54512
+    
+    # clear out old builds, so we don't upload the wrong thing
+    rm -f target/try-$USER-*
+    
+    mvn -Pdeva -DskipTests=true $@ package  
+    
+    _date=`date -u +%F.%H%M%S%s`
+    _filename=try-$USER-try-$_date.tar.gz
+    _filepath=target/$_filename
+    
+    # This would be the simple version: 
+    # tar czvf $_filepath pom.xml target/*.jar  
+    # ...but that only handles single-module projects.  This handles multi-module projects: 
+    find . -name "pom.xml" -or -name "*.jar" | xargs tar -czvf $_filepath
+    
+    echo "created try package at $_filepath"
+    echo "now uploading to Jenkins..."
+
+    $DIR/wait-and-notify.sh $JENKINS_HOST $JENKINS_SSH_PORT $JENKINS_HTTP_PORT $_filename $_filepath $USER &amp;
+    #Backgrounded; we don't want to wait.  The script will notify on completion using Growl.
+</pre>
+
+<p>The “wait-and-notify.sh” script just looks like this: </p>
+
+<pre class="brush: bash">
+    #!/bin/sh 
+
+    set -e 
+    set -u 
+    
+    HOST=$1
+    SSH_PORT=$2
+    HTTP_PORT=$3
+    FILENAME=$4
+    FILEPATH=$5
+    USERNAME=$6
+    
+    scp $FILEPATH  $HOST:/tmp/$FILENAME
+    ssh $HOST -p $SSH_PORT build try-build -p filename=/tmp/$FILENAME -p username=$USERNAME -s  
+    # This is also an option, but jenkins-cli doesn't handle an encrypted private key, and who leaves their private key unencrypted?
+    #java -jar jenkins-cli.jar -i ~/.ssh/id_dsa -s $1/job/try-build  build try-build -p attempt.tar.gz=$2 -p username=$3 -s  
+    # This would be an alternative to using private keys for jenkins-cli.jar, but you'd need to enter a username and password 
+    # --username `git config user.name` --password (something entered at the command line)
+    
+    echo "Job has been started on Jenkins. See http://$HOST:$HTTP_PORT/job/try-build for status."
+    
+    # Did the build succeed?
+    if [ $? -eq 0 ] 
+    then
+      growlnotify "Try completed successfully"
+    else  
+      growlnotify "Try failed!"
+    fi
+</pre>
+
+<p>The Jenkins job is a basic build with two parameters, one called “username” and one called “filename”. 
+The build runs this script as its first step: </p>
+
+<pre class="brush: bash">
+    echo "Building try number ${BUILD_NUMBER} for user ${username}"
+    
+    # This shouldn't be necessary -- Jenkins should keep each build separate -- but it seems that it wasn't the case. So we'll keep each build in a subdirectory by build number, which is easy enough. 
+    _dirname=${BUILD_NUMBER} 
+    mkdir $_dirname
+    tar  xzvf ${filename} -C ${_dirname}
+    cd ${_dirname}
+    
+    # unzip each of our -tests.jar files into a test-classes directory
+    find . -name "*-tests.jar" -execdir unzip -o {} -d test-classes \;
+    
+    # unzip the normal jar files into a classes directory
+    find . -name "*SNAPSHOT.jar" -execdir unzip -o {} -d classes \;
+</pre>
+
+<p>It then invokes a top-level Maven target:  <code>surefire:test -fae</code>. This runs the actual Maven tests, but without any build step (since we’re invoking the surefire:test plugin explicitly and not the “test” phase.  <code>-fae</code> tells it to fail at the end instead of as soon as it sees a test failure; it’s entirely optional. </p>
+
+<p>There’s a lot of potential improvement.  For example, right now it’s hard to tell just by looking at the Jenkins build queue who’s try is building. We could fix that within the build by using the <a href="https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin">description setter plugin</a>. I haven’t tried that yet. </p>
+
+<p>Try it out, let me know what you think. Or, if you have a better idea of how to get around long database-bound tests, I’m all ears.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/01/24/greasemonkey/">Greasemonkey Is Underrated</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-24T00:00:00-05:00" pubdate data-updated="true">Jan 24<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I’ve heard about Greasemonkey a few times over the past few years.  I remember reading a few people wax eloquent about it, mainly how great it is for changing the layout of web pages (like a more convenient <a href="http://userscripts.org/scripts/show/101753">Youtube page</a>, or even changing <a href="http://userscripts.org/scripts/show/80853">Google News back to its old layout</a>). 
+And I remember the <a href="http://ejohn.org/blog/greasemonkey-security/">big security kerflaffle</a> a number of years ago (wow, 2005 – has it been that long?). 
+But I’d never had occasion to use it. </p>
+
+<p>But when I started browsing real estate listings in earnest, I got my excuse. I like <a href="www.zillow.com">Zillow</a> and <a href="www.trulia.com">Trulia</a>, but the realtor I am working with has a website of his own that he prefers – clients can save listings as “favorites” and “possibilities”, make notes, and he can make notes or suggestions in return…which makes good sense. But the site is no Zillow or Trulia: it displays far less data, it’s a bit slow, and it’s fixed at 10 results per page. And when there’s over 100 listing my price range to sort through, every little bit helps. </p>
+
+<p>Greasemonkey can’t help the site speed, but I’ve made some inroads on how much data it displays. 
+I hacked up a little Greaseonkey script that runs in Firefox everytime I load the realtor’s search page. The script just goes through each listing and fires off a query to the Zillow API, returning Zillow’s value estimate, the historical min and max value of the house, and a direct link to the listing’s page on Zillow. I may add a couple other things, like tax value and last sold date (is it a flip?). I was excited about adding some neighborhood statistics, too, but unfortunately Zillow doesn’t have neighborhood data for my area.   </p>
+
+<p>Up next: look into the Trulia’s API (I haven’t checked if they have neighborhood information) and maybe Walkscore, Panoramio and Flickr (for neighborhood pictures). 
+After that, some Google Map hacks…but that’s a bit more involved.</p>
+
+<p>If anyone else is considering pimping their webpages – I highly recommend it – I recommend Mark Pilgrim’s <a href="http://commons.oreilly.com/wiki/index.php/Greasemonkey_Hacks/Getting_Started">Greasemonkey Hacks</a>. I heard some disparaging comments about the docs for Greasemonkey, but that page is great. Several of the other docs on <a href="&quot;http://wiki.greasespot.net/Main_Page}">Greasespot’s wiki</a> are worth reading as well. Those of us that are only passable Javascript programmers can be confused by Greasemonkey’s weird sandbox environment, so the documentation is necessary (objects in Greasemonkey are all wrapped with XPCNativeWrappers for security, in response to the security issues from 2005…). I don’t know if it’s mentioned in the documentation, but the newest Greasemonkey version has a “create a new script” menu action that makes getting started dead easy. </p>
+
+<p>As an aside, I have to say that after taking the Stanford’s online <a href="ml-class.org">Machine Learning class</a> this past 
+fall, I was excited about doing some data science to help in the real estate search (“how does the addition of light rail affect nearby housing prices?”). Predicting home prices was actually one of the driving examples through the class. But I’ve been disappointed in how difficult it is to be to get access to large sets of real estate data in the US.  I guess I naïvely thought that since tax valuations and home sales are public record, there’d be a way to access a sizeable dataset. If it’s out there, I haven’t found it. And the listings themselves are almost all closed, living inside each area’s version of the MLS. The closest thing I’ve found are the API’s offered by Zillow and Trulia, but at least Zillow’s terms of service prevent you from storing their service responses locally, and they don’t return MLS results (i.e. most results added by real estate agents) in their search results via the API…you have to ask for the properties individually. </p>
+
+<p>So I’ll have to play around with big data in other ways… </p>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/11/05/cluster-management-and-task-distribution-part-3/">Cluster Management and Task Distribution, Part 3</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-11-05T00:00:00-04:00" pubdate data-updated="true">Nov 5<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>Summary</h2>
+
+This is a followup to my <a href="/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">Zookeeper vs. Jgroups </a>post, and the <a href="/2011/05/15/cluster-management-and-task-distribution-part-2.html">Hazelcast addendum</a>.
+
+<p>I ended up needed caching before I needed cluster management, so after evaluating a few options I implemented a caching facade that could switch between Hazelcast and Infinispan (which is based on Jgroups).  I&#8217;ve been really impressed with Hazelcast so far – no major problems. We did hit a bug with 1.9.2, but found that a patch release with a fix was already out. 
+
+<p>It also has a convenient cluster service built in, so for our cluster management needs, it&#8217;s likely to win for us, provided we don&#8217;t run across any more problems in testing. The interfaces are easy and intuitive, and I don&#8217;t really have anything to complain about – except that there aren&#8217;t many heavy hitters that are openly using it. 
+
+
+<h2>Conclusion</h2>
+
+<p>For our particular set of requirements, Hazelcast appears to be the winner: 
+
+<ul>
+<li>it provides several things we need (distributed data structures, cache, cluster management)</li>
+<li>it&#8217;s easy to use</li>
+<li>it&#8217;s easy to hide behind a set of facades so that we can switch it out if necessary</li>
+<li>it&#8217;s very simple to configure for different client scenarios (it works on EC2, for example)</li> 
+<li>it&#8217;s worked well in testing</li>
+</ul>
+
+But if our requirements were different, I think Zookeeper would have been my choice. Specifically:
+
+
+<ul>
+<li>If I were coordinating more than a handful of servers – say, 50 or more – I&#8217;d go with Zookeeper. It was specifically made for coordinating large numbers of servers reliably. And it&#8217;s now the de-facto standard for that purpose: Facebook, Twitter, LinkedIn, and a lot of others are all using it for node management across large numbers of nodes. At that scale I don&#8217;t want to roll my own if I don&#8217;t have to. </li>
+
+<li>If I owned installation and maintenance. The deployment complications of Zookeeper are one of the main downsides for our purpose; it&#8217;s another server to install and manage, which raises the operational footprint of our app. If we were running the app only within our own datacenter, no big deal – there are Puppet or Chef recipes to install it, and even pre-built EC2 images. That&#8217;s a very manageable hurdle. But we&#8217;re handing the app over to clients to install and manage, and Zookeeper adds more hardware requirements and an installation process that is good for at least a few more pages in the install guide. Hazelcast, on the other hand, adds just one line to a property file (cluster.nodes=x,y,z). Be kind to your ops teams.</li>
+</ul>
+
+There are probably also cases where JGroups is the right answer. It&#8217;s main advantage is its configurability – you can put together a nearly infinite combination of protocols stacks to suit various purposes. Check out the comments of <a href="/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">my first post</a>, for example, for sample code to handle node discovery in a non-multicast (e.g. EC2) environment. But if all you need is cluster management and some pretty typical services on top of that, there are simpler options.
+
+
+I&#8217;m going to be honest – after looking into Zookeeper closely, I&#8217;m looking for excuses to use it.  But I don&#8217;t think that will happen right away. 
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/05/15/cluster-management-and-task-distribution-part-2/">Cluster Management and Task Distribution Part 2: Caching</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-05-15T00:00:00-04:00" pubdate data-updated="true">May 15<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>The question</h2>
+<p>Which technology stack makes more sense for a distributed caching framework?</p>
+
+<h2>The backstory</h2>
+
+<p>I’ve gotten a fair amount of hits on <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">this post</a> comparing JGroups and Zookeeper for task distribution and cluster management. 
+I wanted to write an update of what I’ve investigated so far… unfortunately, my free time to investigate this specific issue has gone kapoof. Getting rid of the single point of failure in task distribution has gone on the backlog again. </p>
+
+<p>However, in the meantime, I’ve done some investigation on distributed caches. This was the same app, but a different need – I needed a quick, practical way to distributed data across the cluster, so I tested Infinispan and Hazelcast. <br /></p>
+
+<p>Infinispan uses JGroups behind the scenes to do its clustering; Hazelcast has its own homegrown set of protocols.</p>
+
+<p>Zookeeper, for all its pluses as a cluster management option, doesn’t have anything to offer for this use case. And since distributed caching came up first as a production requirement, Zookeeper may lose out by default; either of these caches can also be adapted for cluster management and task distribution (in the form of a fully-replicated cache, if nothing else). So if they’re already in the stack, and using them isn’t too much work, that’s likely what we’ll use. It frustrates me to have to make technical decisions this way, but the way that our timelines go, that’s often the way it is. </p>
+
+<h2>Why not Terracotta?</h2>
+
+<p>Terracotta is often at the top of the list when talking about distributed caches, so why wasn’t it here? 
+Three reasons: </p>
+<ul>
+  <li>This particular client has had bad experiences with Terracotta in the past, and was resistent to installing it here.</li>
+  <li>Terracotta requires a server component, which is more operational overhead.  It also makes it more difficult to transparently switch between clustering technologies.</li>
+  <li>Terracotta&#8217;s license (at least, last I checked) is sort-of free, but with a stronger-than-normal attribution clause; adding commercial license cost wasn&#8217;t possible for this minor release. The attribution clause wasn&#8217;t entirely a deal-breaker, but it&#8217;s certainly less appealing.</li>
+</ul>
+
+<p>The first reason there is more significant than the other two. Terracotta may still end up as a distributed caching option in the future.</p>
+
+<p>Unfortunately, this isn’t as in-depth or thorough of an investigation as <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">part 1</a>. I’m not going to go back through the requirements and then see how the candidates stack up. Infinispan and Hazelcast, our two main candidates, have a very similar feature list on paper, so it came down to a hands-on investigation instead. </p>
+
+<h2>The plan</h2>
+
+<p>I already had a generic cache interface that the app was using, so my goal was to write an implementation for both Infinispan and Hazelcast and allow us to switch between the two at startup time. That proved to be a bit of a trick – both have Java configuration options (instead of XML-only configuration) in their most recent versions. Both have some tricks to them.<br /></p>
+
+<p>My goal was to configure either cache with just two properties: </p>
+<pre>
+cache.type=hazelcast
+cache.members=192.168.221.10, 192.168.221.11, 192.168.221.12, 192.168.221.13
+</pre>
+
+<p>The first obviously tells the app whether to use Hazelcast or Infinispan. The second points to at least some of the other cache members. That’s necessary because multicast – which is the default discovery option for both of these products – isn’t available on EC2, which is one of our possible deployment options. For Hazelcast, the list of nodes doesn’t need to be a complete list; it will use the listed nodes as seeds for a complete list. Infinispan, on the other hand, is more unclear.</p>
+
+<h2>Implementation</h2>
+
+<p>I ran into a few issues. For example, in Infinispan, my clever code that parsed the address list, found if one of them applied to the current server, and set the bind address appropriately ran into some snags.  Netstat showed the following: </p>
+
+<pre>
+tcp        0      0 ::ffff:10.192.171.127:8016  :::*                        LISTEN      
+</pre>
+
+<p>It was binding an IPv6 compatibility address. And my “separate port from address” code isn’t smart enough to handle IPv6 addresses, so this wasn’t going to work.
+I worked around it (in this case, I hardcoded out IPv6 addresses…that’s not on my roadmap right now) and eventually got both working.</p>
+
+<p>Writing the code that actually used the distributed caches was painless. The implementations of my simple cache interface came together without any problem; both implement both ConcurrentMap and JCache’s Cache interface, so they both fit in easily.</p>
+
+<p>Unfortunately, I was still running into <a href="https://issues.jboss.org/browse/JGRP-1253">Infinispan issues</a> when a node died and then later rejoined the cluster. </p>
+
+<p>Hazelcast, on the other hand, worked out of the box in this case, so that’s what is going on into testing at the client site.</p>
+
+<p>All in all, Hazelcast surprised me.  It seems to be gaining acceptance on the web:  anecdotally, posts on Stack Overflow from two years ago tended to say “What’s Hazelcast?”.  Last year they would say “Hazelcast? That’s unproven”. This year, when it’s showing up on recommendation lists. Granted: small sample size. But that’s what we have to go on.
+In my testing, it works out of the box and does what it’s supposed to.</p>
+
+<p>Now, it’s worth noting that adding Hazelcast – or any distributed caching – doesn’t come without a cost. Unfortunately, I don’t have that cost quantified, although I’ll try to update this post with measurements if people are curious. But the time spent writing data to and reading data from distributed cache often slow down the application to the point where two machines with a distributed cache are slower than one machine without<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. The break-even point depends on the technology, the workload, and the hardware, and how careful you are with what is written to and read from the distributed cache. The higher the consistency and durability guarantees of the cache, the more painful that cost will be.  </p>
+
+<p>It’s probably worth digging into this cost briefly. It might seem at first glance that this shouldn’t be the case: after all, you’re just storing data in memory, and when a machine on the cluster needs some data, it asks other machines before going to the database. As long as getting the data from another local machine is faster than going to the database and the cache hit rate is reasonably high, it seems like it should be faster.  Alas, it is not the case. </p>
+
+<p>It doesn’t work that way for a couple of reasons: first, because you don’t have any durability guarantees if, after calling cache.put(), it just lives in that first machine’s local memory. If that machine goes down, the data is lost. So most caches (including Infinispan and Hazelcast) will, by default, block the put() call until that data has also been written out to at least one other machine. Of course, if you don’t need that durability, you have options – you can turn off replication entirely, or let it happen in a write-behind queue, so that there’s only a limited window of time in which the data lives on only one machine.</p>
+
+<p>The cache is also likely to be slower because attempts to be clever about which machine holds each element in the cache. It tries to distribute cached data around the available nodes, as well as offer a quick way to compute which machine owns each piece of data, so that it doesn’t have to broadcast a “who has cache key X?” every time you do a cache.get(X).  By default, it does this using a hash function on the cache key.  That means that, when you call cache.put(..) on machine A, there’s no guarantee that the data will stay on machine A. So after calling put(), you may have to wait for the data is written to the machine that is declared the owner of that value, based on the hash of the cache key. It’s worth noting that Terracotta doesn’t work this way – data ownership is a function of the node that last used the data. But Infinispan and Hazelcast both do. </p>
+
+<p>Now, those who are used to distributed systems, this will be old hat, but it surprises a lot of people.  Two machines is very often slower than one. That’s why folks moving to Hadoop and HBase or other dedicated clustering datastores designed to scale to dozens o hundreds of machines find that they don’t start equaling single-machine performance until they move to several machines. Anecdotally, that is often around 5 machines, although it depends heavily on the workload – how much data is being written to and read from distributed storage vs. other uses of time (CPU, other I/O). </p>
+
+<p>So, the moral of the story: be very careful what’s going in and out of cache. “Transparent caching” cannot be – it has a very significant cost over and above the cost of just writing the blocks of local memory, UNLESS you remove enough consistency guarantees that it can happen less obtrusively after the fact.</p>
+
+<p>In related news, Akka 2.0 will gain the clustering support that’s currently reserved for the commercial offering (“Cloudy Akka”)… I’ll be interested to see what that looks like. </p>
+
+<h2>Conclusion</h2>
+
+<p>I’ve split the conclusion into a separate post, <a href="/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>.</p>
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>If you haven’t seen it, check out the <a href="http://www.quora.com/What-are-the-numbers-that-every-computer-engineer-should-know-according-to-Jeff-Dean">“numbers every computer engineer should know”</a> from Jeff Dean’s talk “Building Software Systems at Google and Lessons Learned” at Stanford (<a href="http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf">slides</a>, <a href="http://goo.gl/0MznW]">video</a>).  It has some really useful order-of-magnitude values you can use for back-of-the-envelope estimates of the cost of distributed caching.<a href="#fnref:1" rel="reference">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/12/actor-concurrency/">Actors in Concurrency Terms</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-12T00:00:00-05:00" pubdate data-updated="true">Mar 12<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2 id="intro">Intro</h2>
+
+<p>There’s a lot of talk on the web about actors. And if you’ve followed very much of it at all – especially the back-and-forth on blogs about pros, cons, and whether actors are great/overhyped/not as useful as XYZ, and so on then this won’t be new to you. 
+But hopefully it’s interesting for the rest of us.
+This post was born partly out of my desire to test actors out for myself, and partly out of my desire to play with Akka, an actor framework for Scala and Java. </p>
+
+<p>For a lot of people the reaction to this post will be “well, of course!”  But I was curious, so I had to prove it to myself.  What I want to do here is describe actors (in this case, Scala actors, but the principle should apply to any implementation – let me know if that’s not the case) in terms that those who are used to semaphore-based concurrency will be familiar with. I’m using the phrase “semaphore-based concurrency” as shorthand for the whole paradigm of concurrency in C, Java, and so on – locks, threads, other things you’ll find described in, say, <em>Java Concurrency in Practice.</em></p>
+
+<p>Why? Well, because I’ve been reading a lot about actors, and it’s starting to sink in – when faced with a concurrency problem I’m starting to think, “would actors help in this case?” And to answer that question, I need to know exactly how actors compare and contrast with the other concurrency tools at my disposal. </p>
+
+<p>Important disclaimer: nothing here is intended as a knock on actors. It’s an observation on how they should be used.</p>
+
+<p>I’ll head off a couple of likely arguments up front:</p>
+
+<p>“You’re missing the point of actors!” I hopefully cover that pretty thoroughly below – there are a lot of advantages to actors. </p>
+
+<p>Related: “That’s not the kind of thing that actors were designed for!”  First of all, actors were originally proposed to replace all control flow, so I question the validity of the statement. But I’ve seen it said on many blog comments, or the related “use the right tool for the job” or “It’s just a tool in your toolbox” or “it’s not a silver bullet”.  Those are all well and good; in this post, I’m trying to compare and contrast actors with the my go-to tools for concurrent programming, to put some parameters on when to use actors.</p>
+
+<p>An important caveat, related to “not a situation to use actors” – this example (a cache) is not one you would pick to demonstrate actors.  It’s synchronous by nature, which is one of the primary things that actor architectures try to avoid.  Now, I assume pure actor architectures need caches, and I don’t know how to do a cache that’s purely asynchronous… but being synchronous neutralizes the primary advantage of actors, as I’ll explain later. Comparing a purely asynchronous use-case will have to be a separate post. </p>
+
+<p>That’s a really, critically important caveat to state up front.  I’m talking about uses of actors in situations that are not designed, from the ground up, as actor architectures. Spoiler alert: I’m going to conclude that using an actor as a drop-in replacement for standard semaphore-based design performs poorly. I’ll define “standard”, “design” and “poorly” down below, but this isn’t a knock on actors. It’s an observation on how they should be used.</p>
+
+<p>“You’re comparing apples and oranges!”  I hate that phrase. Pet peeve. All you’ve just said is, “You’re comparing two different things!”  Of course I am.  If they were identical, there’d be no point in comparing them. </p>
+
+<p>Everything in this post has been said before, more succinctly and intelligently.  If you’ve read a lot about actors and their pros and cons, this will be familiar territory. This post was born partly out of my desire to test it out for myself, and partly out of my desire to play with Akka, an actor framework for Scala and Java. If you look at <a href="http://codemonkeyism.com/actor-myths/">this post</a> (especially the comments), you’ll see discussions around a lot of this same territory.</p>
+
+<p>There’s a lot more to actors than I’m getting to here. Actors originally were conceived as an alternative to semaphores, among other things (they were originally conceved as a replacement for <em>all</em> control flow). And it has some advantages vs. semaphores.  However… you have to go through the same amount of work to create a scalable actor framework than you do to create a scalable semaphore-based concurrent data structure…but at least in a JVM-based language, your semaphore-based data structures are already there for you. Actor-based data structures are not.
+So really the message here is – if you’re looking at putting a single actor in place, like this, that’s not the way to go. </p>
+
+<p>a)	A lot of people say concurrency is hard.  I don’t necessarily think so, but I see the point.</p>
+
+<p>I have a couple of biases coming in:  first, I don’t think concurrency as devilishly hard as some people make it out to be.  I’ve certainly created concurrency bugs before, but I’ve caused a lot of other bugs too. I think locks are pretty easy to reason about.  My counter-bias is that I like Scala, and I like the idea of Erlang (the OTP especially) and I’m subject to the normal waves of programming trends that say that actors are cool. And this entire post started as me looking for an excuse to work with Akka, an actor library for Scala. </p>
+
+<p>b)	A lot of people say actors are easier. It’d be nice to compare the two on similar terms.</p>
+
+<p>Most introductions to actors start out with the argument that concurrency is hard, semaphore-based concurrency is particularly hard, and that actors are an easier way of reasoning about concurrency. In general, I think it’s true statement that it’s easy to get semaphore-based concurrency wrong – if you move beyond the trivial “lock the whole class” model.  If you just slap a lock at the entry to every method, and have them all lock on the same thing – so that there is only one thread executing the class at any point in time – it’s pretty easy. Inefficient? Yes. But easy, and pretty bulletproof.  Once you start getting more elegant (http://www.thinkingparallel.com/2007/07/31/10-ways-to-reduce-lock-contention-in-threaded-programs/ ) errors start creeping in.
+I want to explore the argument that actor concurrency is easier – but, similarly, move past the trivial “lock the whole world” concurrency model. But in order to compare like-for-like, we need to either compare trivial semaphore</p>
+
+<p>2)	 First, let’s establish that actors are, in semaphore-based concurrency terms, the equivalent of class-level locking, but with perks.   (or, with more suspense: Let’s see how a simple actor-based cache compares with a simple and not-so-simple cache implementations using semaphore-based concurrency)</p>
+
+<p>Let’s see how a simple actor-based cache compares with simple and not-so-simple cache implementations using semaphore-based concurrency.  In the next post, I’ll explore to improve the actor-based cache.
+Now, the cache is an interesting use case for an actor, because it’s synchronous.  Many (most?) of the advantages from an actor-based architecture rely on asynchrony. I don’t think that makes this a bad example, but it is stacked against actors. But caches are necessary. Perhaps as a followup we can attempt an example that is fully asynchronous. </p>
+
+<p>My conclusion up front, if you’re the “tl;dr” type:  actors have a lot of advantages.  They’re simple to reason about, they allow for some interesting design patterns. A caller who sends an asynchronous message to an actor returns immediately, even if the actor it is calling is terribly overloaded. The equivalent semaphore-based system using class-level locking would instead block the caller until it acquired the lock, which could be a long time depending on the level of contention. This is property of actors is referred to as “liveness”.
+There are some other potential benefits to actors. Having access to their own inboxes allows for interesting SEDA-style scaling possibilities, for example.  And being message-based makes the transition from single-process or single-machine to multi-process and multi-machine somewhat natural, where a traditional app will require a service layer of some sort. Actors impose a “message routing” step which can be a convenient place to put logic around failover, distribution, scaling, and probably other things I’m not thinking of.  Many actor frameworks allow for supervisor hierarchies, which offer a fault-tolerance mechanism, and a hot code replacement mechanism for in-place upgrades. The designers of Erlang knew what they were doing. </p>
+
+<p>But the first advantage – they’re simple to reason about in concurrency terms – comes at a cost:  they are simple to reason about because they are effectively using class-level locking. The most difficult part of getting traditional concurrency right is knowing what to lock, and locking it for only as long as you need it (and no longer). The actor pattern gets around that by effectively locking everything in the class – only one thing will be executing on that actor at a time, ever – and locking it for the entire duration of the method call. This works out in many situations because of the liveness advantage – yes, the lock is coarse, but callers don’t have to wait to acquire the lock. They just drop the message in the actor’s mailbox and continue on. So if all you’re looking for is simpler concurrency, and you don’t intend on taking advantage of the other benefits in your architecture, you are free to choose between actors and the coarsest of locks, at your preference. At the moment, you’re likely to get more sneers by using coarse-level locking, but that’s a psychological phenomenon of programming trends more than a real reflection on the merits of the pattern.</p>
+
+<p>On a similar note, but more of a no-brainer:  if:  1.) all you’re looking for is simpler concurrency, and 2.) you’re not going to take advantage of the other benefits in your architecture, and 3.) there is a ready-made concurrent data structure available to you, that concurrent data structure will beat an actor every time. </p>
+
+<p>That raises a question that probably merits another post: if you’re considering using actors to replace a concurrent data structure, are you thinking about them all wrong?  On the one hand, it seems quite consistent with most descriptions of actors I see: they’re to be used to hide mutable state.  A map (that’s used as a cache, for example) might be mutable, so to handle concurrent access to it, you place it inside an actor. This is exactly the use case that’s described by <something>, <something else="">, and <something else="">. And in this particular example, if the additional benefits of actors (supervisor hierarchies, mailbox introspection, possibly distributed routing …) aren’t immediately useful, then it’s hard to argue for an actor-based approach rather than, say, a ConcurrentHashMap. ConcurrentHashMap is a beautiful data structure – the lock-striping logic is far more sophisticated than anything you’re likely to write, and it’s already written and ready to use. So, all else being equal: use it. </something></something></something></p>
+
+<p>This leads to an interesting psychological phenomenon caused by the cachet of various technologies: 
+The problem is, using this kind of coarse-grained locking feels dirty.  Looking at this, you just KNOW that it could be much better. So it’s very hard to leave it like this. And for good reason: with minimal effort, it could perform significantly better under heavy concurrency.
+But if you implemented the same thing with actors, it’d seem somewhat elegant. Actors are cool. Even though, from a concurrency standpoint, they are equivalent.</p>
+
+<h2 id="our-cache-example">Our Cache Example</h2>
+
+<p>Here’s some steps you might go through when designing a cache. </p>
+
+<p>First, you’d set out your interface. In this case we’ll pick a very simple interface – you can get a value, set a value, remove a value, and get a list of all keys. We’re using the last one mainly for logging in our test class. </p>
+
+<p>The first example you might write looks like this: </p>
+
+<p>This is what I’ll call “class-level locking” or “lock the world” – essentially, the class has one lock, and any method call of consequence has to acquire that lock. </p>
+
+<p>That’s really not bad. But if you’d spent some time looking at java.util.concurrent, you might see some other options that were slightly more sophisticated. Perhaps you’d notice that half of your methods were doing writes, and half were just doing reads – and reads don’t really need to block other reads. So you replace the lock with a ReadWriteLock. </p>
+
+<p>Or perhaps you realize that you can just synchronize access to the data structure itself: </p>
+
+<p>And finally, you might replace this synchronized HashMap (which is, itself, rather coarse in its Java implementation) with a ConcurrentHashMap.  This is a really sophisticated concurrent data structure, which divides the map into a series of stripes which each have their own lock, so a “put” or “get” only locks a portion of the map at a time.  That implementation might look like this: </p>
+
+<p>Future:  Infinispan (claims to have a “mostly lock-free core”, which leads me to believe it uses spin-locking. But I know that in distributed operation it uses striped locks by default, and can be configured for per-key locks. 
+I’d like to plug in some other caches like Hazelcast, as well.</p>
+
+<p>b)	Now, here’s how they perform under load.
+The test class is here, if you’re curious.  Basically, it’s going to run one test thread per CPU on the test machine, run the SimpleLockCache once first for warm-up, then run a whole mess of iterations of “get” and “put”, at a ratio of 2 to 1. </p>
+
+<p>i)	8 threads, Macbook Pro
+ii)	X threads, Amazon EC2 instance.</p>
+
+<p>c)	Now, here’s an actor implementation</p>
+
+<p>Now, here’s the simplest possible actor implementation.  This is borrowed from the Lift framework (here), and adapted for this interface.  It’s simply using an actor to guard access to a HashMap:</p>
+
+<p>d)	Here’s how it performs under load
+i)	8 threads, Macbook Pro
+ii)	X threads, Amazon EC2 instance.</p>
+
+<p>Perhaps unsurprisingly, it does a bit worse than our class-level locking example. And that’s because, of course, it <em>is</em> class-level locking.  It’s synchronizing the whole class, such that only one caller will ever be able to execute on the thread at a time.  Whereas the other semaphore-based examples allowed for multiple threads to execute concurrently in some situations, that can never happen in the actor-based example. Never. It will only ever process one message at a time. </p>
+
+<p>In semaphore-based concurrency, class-level locking is considered crude. And it is. Since the class-level locking in an actor is hidden, it doesn’t come across as crude – at least, not to those of us who don’t use actors much. Perhaps because we just haven’t been trained yet to look at this and see “Whoa, bottleneck!”</p>
+
+<p>I wonder if, when it becomes normal to look at this and say, “Well, obviously, you’ll want to spawn child actors to offer multithreaded access to this data structure, otherwise it’s a bottleneck…”  that we’ll start saying, “man, actor concurrency is hard…there must be a better way”. Perhaps all “next big thing” panaceas are just the result of us not yet seeing the complications…eventually, we get used to the good things but notice the pain points more and more…  and this is starting to sound like an old marriage, so I’ll stop.</p>
+
+<p>Now, again – this is synchronous. Ideal actor architectures are asynchronous. But that doesn’t matter here – whether the calling thread was dutifully waiting for the message to return, or whether it was going about other business, it will still take a the same amount of time to process the thread because it’s a bottleneck.  And it’s silly to think that you’re not, at some point, going to need the results from that call somehow. Bottlenecks matter just as much in actor frameworks. So you need to deal with the bottleneck. </p>
+
+<p>The one advantage that actor concurrency has (that I’m aware of) is “liveness”. That is, if this were an asynchronous system, and if the cache was very backed up (lots of attempted concurrent accesses) then a call to the backed-up actor would return immediately, no matter how many other concurrently attempted accesses there were. That’s because the call to the actor is really just placing a message in its inbox; placing that message can occur quickly and return. The semaphore-based alternative would block, since the actual execution was happening in the caller’s thread. The actor would implicitly be executed in a different thread, so you gain that advantage.  And in a highly-contested, asynchronous system, that could be significant. In a synchronous environment (which a cache will always be), there’s no difference – the caller has to wait for the result, so the liveness advantage is lost. </p>
+
+<p>h.     The way you deal with bottlenecks, though, is different in an actor-based system.
+3.)  So, basic actor concurrency looks like class-level lcoking in a semaphore-based system, but with benefits. To reiterate: it has some advantages:
+a.     Advantages….
+4.)  Next: I’ll stumble through some attempts to improve the cache, based on the same principles that worked so well in the semaphore-based version. 
+a.     If anyone has an already-written one out there, let me know, I’ve looked and haven’t found one.</p>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/">Cluster Management and Task Distribution: Zookeeper vs. JGroups</a></h1>
     
     
@@ -302,8 +939,7 @@ In case you haven’t watched it, here’s the rough paraphrase of the definitio
   </header>
 
 
-  <div class="entry-content"><div>
-<h2 id="internal-source-marker_0.6950423333328217">The question</h2>
+  <div class="entry-content"><h2 id="internal-source-marker_0.6950423333328217">The question</h2>
 Which technology stack makes more sense for a distributed task-management framework?
 <h2>The backstory</h2>
 The target app I’m working on at the moment is a task-management framework: it distributes discrete units of work (tasks) to workers which may be spread across multiple servers.  Right now, it’s a single-master system: we can add as many nodes as we want (at runtime, if we want) but only one can ever serve as the “master” node, and that node can’t fail.  The master needs to keep track of a bunch of tasks, which have a hierarchical structure (tasks can have one parent and 0-n child tasks).  It manages the tasks&#8217; interdependencies, checks on the health of the worker nodes, and redistributes tasks if they time out or if their worker node goes down.
@@ -311,29 +947,28 @@ A lot of task-management systems put tasks in one or more queues (Resque, beanst
 
 So the single point of failure needs to go.  I’m looking at some of the options for instead distributing the data (the tree of tasks, who&#8217;s executing what, whether the nodes are healthy, whether a task has timed out) across multiple servers.
 <h2>The requirements</h2>
-<ol>
-	<li>Consistency: the task tree should be shared between more than one server, with guaranteed consistency.  I.e if server A is serving as the master node and it goes down, another server needs to be able to pick up and continue, with the exact same view of the current task tree.  We don’t want tasks to accidentally get dropped or executed twice because server B’s version of the task tree wasn&#8217;t up-to-date.</li>
-	<li>Elasticity: nodes have to be able to come online and participate in the cluster, and then drop off again.  The full list of nodes can’t be hard-coded at startup.</li>
-	<li>Partition-tolerance: Ideally, we should be able to handle a network partition.  We can do that at the expense of availability: that is, if there are 5 nodes, numbered 1 through 5, and nodes 1 and 2 get separated from 3 through 5, it’s OK for 1 and 2 to realize they’re the minority and stop processing.   The following caveats apply:
+<dl>
+  <dt>Consistency</dt><dd>The task tree should be shared between more than one server, with guaranteed consistency.  I.e if server A is serving as the master node and it goes down, another server needs to be able to pick up and continue, with the exact same view of the current task tree.  We don’t want tasks to accidentally get dropped or executed twice because server B’s version of the task tree wasn&#8217;t up-to-date.</dd><br />
+  <dt>Elasticity</dt><dd>Nodes have to be able to come online and participate in the cluster, and then drop off again.  The full list of nodes can’t be hard-coded at startup.</dd><br />
+	<dt>Partition-tolerance</dt><dd>Ideally, we should be able to handle a network partition.  We can do that at the expense of availability: that is, if there are 5 nodes, numbered 1 through 5, and nodes 1 and 2 get separated from 3 through 5, it’s OK for 1 and 2 to realize they’re the minority and stop processing.   The following caveats apply:
 <ol>
 	<li>We need a way to handle an intentional reduction in servers.  That is, if we spun up 10 extra cloud servers for a few hours to help in peak processing, we’d need a way to tell the cluster that we were going to spin them back down again, so the remaining nodes didn’t think they were a minority segment of a partitioned network.</li>
 	<li>In case of a catastrophic failure of a majority of servers, I’d like a way to kick the remaining nodes and tell them to process anyway.  But I’m ok if that requires manual intervention&#8230; that’s an extreme case.</li>
-</ol>
-</li>
-	<li>Scalability: I’m targeting 100 nodes as a practical maximum.  In production, we’ve used up to 5 nodes.  I don’t expect us to go above 10 in the near future, so I’m adding an order-of-magnitude safety margin on top of that.  Of course, when the task management framework goes open source, 100 nodes will be quite feasible for users with different problem domains and deployment patterns.  In our typical deployment scenarios, customers prefer fewer, larger servers.</li>
-	<li>EC2:  The clustering option has to be able to run on EC2 instances.  It can&#8217;t depend on IP multicast.</li>
-	<li>Deployment simplicity:   As few moving parts as possible, to make integrating and deploying the software as simple as possible. Our app is often deployed by the client on their hardware, so we&#8217;d like to make their lives as easy as possible. And as the framework goes open source, of course, it&#8217;s going to be more helpful for a more people if it has a low barrier of entry.</li>
-	<li>Implementation simplicity:  The less code I write, the fewer bugs I introduce.</li>
-	<li>Event bus:  nodes can also pass events to other nodes, typically by multicast.  We use JMS for this currently, and we can continue to do so, but it’d be nice to get rid of that particular moving part if possible.</li>
-</ol>
+</ol></dd>
+<dt>Scalability</dt><dd>I’m targeting 100 nodes as a practical maximum.  In production, we’ve used up to 5 nodes.  I don’t expect us to go above 10 in the near future, so I’m adding an order-of-magnitude safety margin on top of that.  Of course, when the task management framework goes open source, 100 nodes will be quite feasible for users with different problem domains and deployment patterns.  In our typical deployment scenarios, customers prefer fewer, larger servers.</dd><br />
+<dt>EC2</dt><dd> The clustering option has to be able to run on EC2 instances.  It can&#8217;t depend on IP multicast.</dd><br />
+<dt>Deployment simplicity</dt><dd>  As few moving parts as possible, to make integrating and deploying the software as simple as possible. Our app is often deployed by the client on their hardware, so we&#8217;d like to make their lives as easy as possible. And as the framework goes open source, of course, it&#8217;s going to be more helpful for a more people if it has a low barrier of entry.</dd><br />
+<dt>Implementation simplicity</dt><dd>  The less code I write, the fewer bugs I introduce.</dd><br />
+<dt>Event bus</dt><dd>  Nodes can also pass events to other nodes, typically by multicast.  We use JMS for this currently, and we can continue to do so, but it’d be nice to get rid of that particular moving part if possible.</dd><br />
+</dl>
 There is not necessarily a requirement to persist all tasks to disk, in order to keep them safe between server restarts.  In our previous version, tasks were kept in a JMS queue, and we ended up turning disk persistence off &#8211; in practice, in the case of a failure that requires manual intervention (for example, a JMS broker failure, or the failure of all nodes that had tasks in memory) almost always means that we want to manually restart jobs after the system comes back up &#8211; possibly different jobs, possibly a reduced set of tasks to make up time.  We found that we rarely want to start back up exactly where we left off.
 So, if the solution automatically persists to disk, I’ll probably create a way to bypass that if necessary (a command-line flag that lets us clear the current tasks on startup, perhaps).
 <h2>Zookeeper</h2>
-<table><col width="*"></col> <col width="*"></col> 
+<table class="zebra-striped"><col width="*"></col> <col width="*"></col> 
 <tbody>
 <tr>
 <td>Consistency</td>
-<td>Zookeeper pushes everything to disk &#8211; writes are always persisted, for safety.
+<td>Zookeeper pushes everything to disk – writes are always persisted, for safety.
 Zookeeper is designed for cluster coordination, and it’s well-thought-out.  It has documented consistency guarantees, lots of documented recipes for things like leader election, and supports subscription of listeners on tree changes.</td>
 </tr>
 <tr>
@@ -354,7 +989,7 @@ Zookeeper is designed for cluster coordination, and it’s well-thought-out.  I
 </tr>
 <tr>
 <td>Deployment Simplicity</td>
-<td>The main downside for Zookeeper is its operational requirements:  two classes of servers (with Zookeeper and without), potentially separate server instances running on Zookeeper-enabled servers, fast disk access required (according to the ZK operations manual, two fast disks &#8211; one for logs, the other for … er..something else.)  That’s a significant increase in operational complexity for a product that is distributed to and maintained by clients.  That also means work necessary for us to make it as turnkey as possible.A Zookeeper-based solution would pick three or five nodes to be Zookeeper nodes as well as task nodes.  Ideally, for Zookeeper’s purposes, it’d be three dedicated servers, but that isn’t going to happen in our architecture.  So Zookeeper will have to coexist with the current app on servers where it’s installed.  For deployment simplicity, I’ll probably need to come up with a way to start up Zookeeper automatically when the server comes up on those nodes. Zookeeper used to not play well as an embedded app (according to some reports from the Katta project); that may be fixed now, but if not I may need to put that logic in the bootstrap script.</td>
+<td>The main downside for Zookeeper is its operational requirements:  two classes of servers (with Zookeeper and without), potentially separate server instances running on Zookeeper-enabled servers, fast disk access required (according to the ZK operations manual, two fast disks – one for logs, the other for … er..something else.)  That’s a significant increase in operational complexity for a product that is distributed to and maintained by clients.  That also means work necessary for us to make it as turnkey as possible.A Zookeeper-based solution would pick three or five nodes to be Zookeeper nodes as well as task nodes.  Ideally, for Zookeeper’s purposes, it’d be three dedicated servers, but that isn’t going to happen in our architecture.  So Zookeeper will have to coexist with the current app on servers where it’s installed.  For deployment simplicity, I’ll probably need to come up with a way to start up Zookeeper automatically when the server comes up on those nodes. Zookeeper used to not play well as an embedded app (according to some reports from the Katta project); that may be fixed now, but if not I may need to put that logic in the bootstrap script.</td>
 </tr>
 <tr>
 <td>Implementation Simplicity</td>
@@ -362,13 +997,13 @@ Zookeeper is designed for cluster coordination, and it’s well-thought-out.  I
 </tr>
 <tr>
 <td>Event bus</td>
-<td>Zookeeper doesn’t provide events&#8230;unless you write events directly to Zookeeper.  It could, however, obviate the need for a lot of events.  For example, we wouldn’t need a “task finished” event if all nodes just set watches on tasks&#8230;they’d be automatically notified.  Same with hearbeats, node failure, and so on &#8211; they’d be taken care of by Zookeeper.</td>
+<td>Zookeeper doesn’t provide events&#8230;unless you write events directly to Zookeeper.  It could, however, obviate the need for a lot of events.  For example, we wouldn’t need a “task finished” event if all nodes just set watches on tasks&#8230;they’d be automatically notified.  Same with hearbeats, node failure, and so on – they’d be taken care of by Zookeeper.</td>
 </tr>
 </tbody>
 </table>
 Zookeeper doesn’t list AIX as a supported environment, which is interesting.  We do have to support AIX (unfortunately).
 <h2>JGroups</h2>
-<table><col width="*"></col> <col width="*"></col> 
+<table class="zebra-striped"><col width="*"></col> <col width="*"></col> 
 <tbody>
 <tr>
 <td>Consistency</td>
@@ -377,19 +1012,19 @@ With guaranteed message delivery, we could have consistent in-memory views of th
 </tr>
 <tr>
 <td>Elasticity</td>
-<td>I have to look into how elastic JGroups can be without IP multicast.  I know it can work without IP multicast; I just don’t know exactly HOW it works.</td>
+<td><strike>I have to look into how elastic JGroups can be without IP multicast.  I know it can work without IP multicast; I just don’t know exactly HOW it works.</strike> <i>updated 01 March 2011:</i> JGroups has a discovery method called <a href="http://www.jgroups.org/manual/html/user-advanced.html#d0e2789">TCPPING</a>, in which you predefine a set of known members that new members will contact for membership lists. It also has a standalone &#8220;gossip router&#8221; that performs the same purpose. I&#8217;ve played with this; it works on EC2 without problems. </td>
 </tr>
 <tr>
 <td>Partition-tolerance</td>
-<td>Good question&#8230;.</td>
+<td><a href="http://www.jgroups.org/manual/html/user-advanced.html#d0e3335">There are options</a>.  JGroups has a merge protocol, but it does require application-specific code to determine what exactly to do when the partitions come back together.</td>
 </tr>
 <tr>
 <td>Scalability</td>
-<td>More speculative, because JGroups has the option for infinite combinations of protocols on its stack.  Worst case, the cluster needs to define two classes of nodes, similar to the Zookeeper implementation: “nodes which can become leaders” and “nodes which can’t.”</td>
+<td>More speculative, because JGroups has the option for infinite combinations of protocols on its stack.  Worst case, the cluster needs to define two classes of nodes, similar to the Zookeeper implementation: “nodes which can become leaders” and “nodes which can’t.”  But JGroups has been deployed with hundreds of nodes.</td>
 </tr>
 <tr>
 <td>EC2-friendliness</td>
-<td>JGroups can be used on EC2 as long as you use TCP-based “multicast” instead of actual IP multicast.</td>
+<td>JGroups can be used on EC2 as long as you use a non-multicast discovery method.</td>
 </tr>
 <tr>
 <td>Deployment Simplicity</td>
@@ -405,9 +1040,8 @@ With guaranteed message delivery, we could have consistent in-memory views of th
 </tr>
 </tbody>
 </table>
-</div>
 <h2>Conclusion</h2>
-&#8230;tbd&#8230;
+I have a followup post about Hazelcast <a href="/2011/05/15/cluster-management-and-task-distribution-part-2.html">here</a>, and a brief conclusion <a href="/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>. 
 </div>
   
   
@@ -596,235 +1230,9 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/09/13/ssl-curiosity/">SSL Curiosity</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-09-13T00:00:00-04:00" pubdate data-updated="true">Sep 13<span>th</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Ok, perhaps this isn’t a curiosity to you all.  Perhaps everyone knew this.  But I didn’t, and I didn’t find it in a quick Google search, so I thought I’d put it out here.    </p>
-
-<p>I’m working on a project that uses 2-way (client-auth) SSL; in doing so, I’ve created a test root CA and used it to generate an array of test certs for clients and servers. I’ve done a bit of testing on my local PC, and it’s working well; the server uses client certificates for authentication and authorization of web service requests, and so on. Acegi is our friend. </p>
-
-<p>However, another developer on the project tried accessing the site not long ago and told me it didn’t work.  “I just get ‘Cannot find server’”, he said.  Turns out that he was using Internet Explorer, and I had been using Firefox. I could replicate his results with IE – the browser would give the prompt saying “This site’s certificate is not trusted” or something to that extent, and then when you said “accept the certificate”, it would throw up a “Cannot find server” error.  The same series of steps in Firefox would work without a problem.    </p>
-
-<p>After fiddling a bit, it turns out that adding the test CA to my Trusted Root Certificate Authorities list fixed the problem.  Honestly, I’m not sure why this would be necessary, if Internet Explorer had already asked me whether to accept the site’s certificate, but my best guess is that IE was simply ignoring my answer and refusing to load the site whose certificate was signed with an unknown root CA.   </p>
-
-<p>Again, maybe this is a known bug, but hey, I thought I’d throw it out there.  Adding the test CA to IE’s “trusted root certificates” list fixed the problem.</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/06/16/jamon/">Another Library</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-06-16T00:00:00-04:00" pubdate data-updated="true">Jun 16<span>th</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I’ve been teased that my current project has more external libraries than it does actual lines of code.  Now, I’m not convinced that’s a bad thing – I’ve said before that the hardest thing about leaving Java for some other language would be giving up all of the 3rd-party libraries and projects that do 90% of your work for you. </p>
-
-<p>Today’s is JAMon, a small library with a really simple purpose: keep track of performance statistics. I’ve written static classes or singletons that keep track of min, max and average times for various things on several projects; this just keeps me from having to write it again. Not saving a ton of time, but saving some. And <a href="http://iremia.univ-reunion.fr/intranet/wiki/Wiki.jsp?page=SpringJamon">here</a> is a simple step-by-step for integrating it into Spring as an interceptor. There are several discussions out there for how to use JAMon with Spring, and whether Spring’s built-in JAMon interceptor (is there anything Spring <em>doesn’t</em> have built in?) should use logging semantics to activate it, but the one above is simply the XML to cut and paste into Appfuse’s Spring config, which is all I really want. I understand what it does, it’s just saving me the five minutes of thinking about it.  Which is what I’m after.  It’s just a beautiful feeling when you want something done, no matter how small, and find that it’s already been done for you.  Like realizing you want another cup of coffee and finding a steaming mug already on your desk.</p>
-
-<p>With that said, I’m going to go make some coffee now… </p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/05/19/axis2/">Perhaps I&#8217;m Missing Something&#8230;</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-05-19T00:00:00-04:00" pubdate data-updated="true">May 19<span>th</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I’ve been playing with Axis2 for a couple of days.  One of the features that they boast (and added to XFire’s <a href="http://xfire.codehaus.org/Stack+Comparison">SOAP Stack Comparison</a>) is hot-deployable services. </p>
-
-<p>Has anyone ever wanted to hot-deploy a web service? </p>
-
-<p>Really now…</p>
-
-<p>Granted, I’m sure someone could point out the features in some of my projects that no one really wanted. Or, perhaps, someone should point out why in fact this is a killer feature and I’ve just missed it. But it seems particularly weird to me…</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/05/16/for-the-record/">For the Record&#8230;</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-05-16T00:00:00-04:00" pubdate data-updated="true">May 16<span>th</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>For the record, a custom STaX serializer and deserializer for a moderately small object graph will run you about 1000 lines of code. </p>
-
-<p>Just in case you were curious. </p>
-
-<p><i>update, 2006-08-23: </i></p>
-
-<p>Correction: it’s now up to 2000.  It also supports another (rather different) schema that is being mapped to the same domain object, which accounts for much of the increase.</p>
-
-<p>Just thought you might be interested. </p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/05/01/the-love-hate-of-jibx/">The Love-Hate of JiBX</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-05-01T00:00:00-04:00" pubdate data-updated="true">May 1<span>st</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Ok, I love JiBX’s flexibility.  I have two different versions of an existing schema that I’m mapping to the same Java object, which is the same Java object I’m then storing in Hibernate.  This is the first time I’ve been able to use the same domain object throughout the application, and I love it.  No more relying on framework-generated objects, and no more translation layers.</p>
-
-<p>Framework-generated objects are bad for my schemas, which have a lot of nested anonymous complex types (hey, I didn’t write them) which frameworks tend to handle badly.  XMLBeans, for instance, creates nested inner types, which gets very ugly.  It may be personal preference, but that seems very messy; it means one very large object. Hibernate, I imagine, would also be unhappy with that setup. </p>
-
-<p>So the alternative is a translation layer – a class that takes in a WebserviceFriendlyDomainObject and spits back a HibernateFriendlyDomainObject. This is a pain to write, but mostly just smells bad – it just shouldn’t be necessary.  I’ve done it as a workaround so far, but it seems like there should be a way around it.</p>
-
-<p>JiBX lets me use the same object from front to back. But that brings me to one of the hates – I have to write a JiBX binding file instead.  It’s funny, because for whatever reason this passes under the “ugly architecture” radar, but it’s actually not much different than writing a translation layer. It’s just writing your translation layer in XML instead of in Java. Which, if anything, simply adds difficulty, because I find myself trying to do complex logic in the binding file that could really benefit from a Turing-complete language. Which is ironic, since I’m writing it to save me from writing the same thing in Java. </p>
-
-<p>Now, it’s still a bit better than a translation layer. The typical translator is converting one object to another object to be turned into XML. The JiBX binding is going straight to XML. It’s certainly faster than the translation step. But from the coder’s point of view, the XMLBeans-generated domain object is one method call away from being XML, so it doesn’t <i>feel</i> substantially different.</p>
-
-<p>My other complaint about JiBX so far is web service support – it’s pretty new, and support in Axis2 (another topic entirely) and XFire is either brand-new or still in CVS.  I’m finding that my data binding layer is informing my choice in web service stacks, which I resent.  I haven’t tried XFire’s JiBX support yet (since Codehaus’s SVN server is down) but they were planning on getting it into 1.1 and it didn’t make it, which isn’t a good sign. </p>
-
-<p>The annoyances of bytecode manipulation are already documented elsewhere; I’ve found that every now and again I have to run an ant task that inserts the JiBX bindings into Eclipse’s class files, and that’s the extent of it. It irks some of people, but doesn’t bother me. </p>
-
-<p>So I’m not sure if JiBX will stay around in this project. That’s in spite of substantial positives – at this point, it could easily fall either way. </p>
-
-<p><i>Update, 2006-05-16:</i></p>
-
-<p>It didn’t stay around. In the end, expressing logic (“if this element… else if this element…”) in XML was too much. I moved over to a hand-rolled STaX serializer and deserializer – see <a href="/2006/05/16/for-the-record.html">“for the record”</a> for a quick peek into the main downside there. </p>
-
-<p>Why I went this route instead of XMLBeans or JAXB merits more discussion.  Briefly, JAXB didn’t meet the performance requirements for this part of the system, and XMLBeans refuses to fully parse the schemas in question. It tries, but something in the deeply nested anonymous complex types gives it fits.  Writing code against those types as they’re generated in XMLBeans is also ugly, but then so is the custom parser. </p>
-
-<p>All in all, I’m coming to terms with the translation layer. But it still feels like it oughtn’t be necessary…  </p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
+    
+      <a class="prev" href="/blog/page/2/">&larr; Older</a>
     
     <a href="/blog/archives">Blog Archives</a>
     
@@ -841,19 +1249,19 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
       </li>
     
       <li class="post">
-        <a href="/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/">Cluster Management and Task Distribution: Zookeeper vs. JGroups</a>
+        <a href="/blog/2012/01/28/try-server/">Takes too long to build your project? Try harder.</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2010/12/10/on-configuration/">On Configuration</a>
+        <a href="/blog/2012/01/24/greasemonkey/">Greasemonkey is Underrated</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2010/03/05/oh-oracle/">Oh, Oracle</a>
+        <a href="/blog/2011/11/05/cluster-management-and-task-distribution-part-3/">Cluster Management and Task Distribution, part 3</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2009/12/19/on-the-cusp-of-big-data/">on the cusp of Big Data</a>
+        <a href="/blog/2011/05/15/cluster-management-and-task-distribution-part-2/">Cluster Management and Task Distribution part 2: Caching</a>
       </li>
     
   </ul>

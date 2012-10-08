@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Actors in Concurrency Terms - matt thinks so</title>
+  <meta name="author" content="Matt Hoffman">
+
+  
+  <meta name="description" content="Intro There’s a lot of talk on the web about actors. And if you’ve followed very much of it at all – especially the back-and-forth on blogs about &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://matthoffman.github.com/blog/2011/03/12/actor-concurrency/">
+  <link href="/favicon.ico" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="matt thinks so" type="application/atom+xml">
+  <!-- bring in the Droid Sans font from Google --> 
+<link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold' rel='stylesheet' type='text/css'>
+<!-- a couple others that Octopress uses by default --> 
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-21082916-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner">    <div id="title" class="title">
+      <div id="titletext" class="titletext">
+        <h1>
+          <a href="/">
+            <img src="/images/lightbulb_dim_small.png" border="0" height="80" width="80"/>
+            <span id="namefirst">matt</span>
+            <span id="namemiddle">thinks</span>
+            <span id="namelast">so</span><span id="namepre">&hellip;</span>
+           </a>
+        </h1>
+      </div>
+    </div>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:matthoffman.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Actors in Concurrency Terms</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-12T00:00:00-05:00" pubdate data-updated="true">Mar 12<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2 id="intro">Intro</h2>
+
+<p>There’s a lot of talk on the web about actors. And if you’ve followed very much of it at all – especially the back-and-forth on blogs about pros, cons, and whether actors are great/overhyped/not as useful as XYZ, and so on then this won’t be new to you. 
+But hopefully it’s interesting for the rest of us.
+This post was born partly out of my desire to test actors out for myself, and partly out of my desire to play with Akka, an actor framework for Scala and Java. </p>
+
+<p>For a lot of people the reaction to this post will be “well, of course!”  But I was curious, so I had to prove it to myself.  What I want to do here is describe actors (in this case, Scala actors, but the principle should apply to any implementation – let me know if that’s not the case) in terms that those who are used to semaphore-based concurrency will be familiar with. I’m using the phrase “semaphore-based concurrency” as shorthand for the whole paradigm of concurrency in C, Java, and so on – locks, threads, other things you’ll find described in, say, <em>Java Concurrency in Practice.</em></p>
+
+<p>Why? Well, because I’ve been reading a lot about actors, and it’s starting to sink in – when faced with a concurrency problem I’m starting to think, “would actors help in this case?” And to answer that question, I need to know exactly how actors compare and contrast with the other concurrency tools at my disposal. </p>
+
+<p>Important disclaimer: nothing here is intended as a knock on actors. It’s an observation on how they should be used.</p>
+
+<p>I’ll head off a couple of likely arguments up front:</p>
+
+<p>“You’re missing the point of actors!” I hopefully cover that pretty thoroughly below – there are a lot of advantages to actors. </p>
+
+<p>Related: “That’s not the kind of thing that actors were designed for!”  First of all, actors were originally proposed to replace all control flow, so I question the validity of the statement. But I’ve seen it said on many blog comments, or the related “use the right tool for the job” or “It’s just a tool in your toolbox” or “it’s not a silver bullet”.  Those are all well and good; in this post, I’m trying to compare and contrast actors with the my go-to tools for concurrent programming, to put some parameters on when to use actors.</p>
+
+<p>An important caveat, related to “not a situation to use actors” – this example (a cache) is not one you would pick to demonstrate actors.  It’s synchronous by nature, which is one of the primary things that actor architectures try to avoid.  Now, I assume pure actor architectures need caches, and I don’t know how to do a cache that’s purely asynchronous… but being synchronous neutralizes the primary advantage of actors, as I’ll explain later. Comparing a purely asynchronous use-case will have to be a separate post. </p>
+
+<p>That’s a really, critically important caveat to state up front.  I’m talking about uses of actors in situations that are not designed, from the ground up, as actor architectures. Spoiler alert: I’m going to conclude that using an actor as a drop-in replacement for standard semaphore-based design performs poorly. I’ll define “standard”, “design” and “poorly” down below, but this isn’t a knock on actors. It’s an observation on how they should be used.</p>
+
+<p>“You’re comparing apples and oranges!”  I hate that phrase. Pet peeve. All you’ve just said is, “You’re comparing two different things!”  Of course I am.  If they were identical, there’d be no point in comparing them. </p>
+
+<p>Everything in this post has been said before, more succinctly and intelligently.  If you’ve read a lot about actors and their pros and cons, this will be familiar territory. This post was born partly out of my desire to test it out for myself, and partly out of my desire to play with Akka, an actor framework for Scala and Java. If you look at <a href="http://codemonkeyism.com/actor-myths/">this post</a> (especially the comments), you’ll see discussions around a lot of this same territory.</p>
+
+<p>There’s a lot more to actors than I’m getting to here. Actors originally were conceived as an alternative to semaphores, among other things (they were originally conceved as a replacement for <em>all</em> control flow). And it has some advantages vs. semaphores.  However… you have to go through the same amount of work to create a scalable actor framework than you do to create a scalable semaphore-based concurrent data structure…but at least in a JVM-based language, your semaphore-based data structures are already there for you. Actor-based data structures are not.
+So really the message here is – if you’re looking at putting a single actor in place, like this, that’s not the way to go. </p>
+
+<p>a)	A lot of people say concurrency is hard.  I don’t necessarily think so, but I see the point.</p>
+
+<p>I have a couple of biases coming in:  first, I don’t think concurrency as devilishly hard as some people make it out to be.  I’ve certainly created concurrency bugs before, but I’ve caused a lot of other bugs too. I think locks are pretty easy to reason about.  My counter-bias is that I like Scala, and I like the idea of Erlang (the OTP especially) and I’m subject to the normal waves of programming trends that say that actors are cool. And this entire post started as me looking for an excuse to work with Akka, an actor library for Scala. </p>
+
+<p>b)	A lot of people say actors are easier. It’d be nice to compare the two on similar terms.</p>
+
+<p>Most introductions to actors start out with the argument that concurrency is hard, semaphore-based concurrency is particularly hard, and that actors are an easier way of reasoning about concurrency. In general, I think it’s true statement that it’s easy to get semaphore-based concurrency wrong – if you move beyond the trivial “lock the whole class” model.  If you just slap a lock at the entry to every method, and have them all lock on the same thing – so that there is only one thread executing the class at any point in time – it’s pretty easy. Inefficient? Yes. But easy, and pretty bulletproof.  Once you start getting more elegant (http://www.thinkingparallel.com/2007/07/31/10-ways-to-reduce-lock-contention-in-threaded-programs/ ) errors start creeping in.
+I want to explore the argument that actor concurrency is easier – but, similarly, move past the trivial “lock the whole world” concurrency model. But in order to compare like-for-like, we need to either compare trivial semaphore</p>
+
+<p>2)	 First, let’s establish that actors are, in semaphore-based concurrency terms, the equivalent of class-level locking, but with perks.   (or, with more suspense: Let’s see how a simple actor-based cache compares with a simple and not-so-simple cache implementations using semaphore-based concurrency)</p>
+
+<p>Let’s see how a simple actor-based cache compares with simple and not-so-simple cache implementations using semaphore-based concurrency.  In the next post, I’ll explore to improve the actor-based cache.
+Now, the cache is an interesting use case for an actor, because it’s synchronous.  Many (most?) of the advantages from an actor-based architecture rely on asynchrony. I don’t think that makes this a bad example, but it is stacked against actors. But caches are necessary. Perhaps as a followup we can attempt an example that is fully asynchronous. </p>
+
+<p>My conclusion up front, if you’re the “tl;dr” type:  actors have a lot of advantages.  They’re simple to reason about, they allow for some interesting design patterns. A caller who sends an asynchronous message to an actor returns immediately, even if the actor it is calling is terribly overloaded. The equivalent semaphore-based system using class-level locking would instead block the caller until it acquired the lock, which could be a long time depending on the level of contention. This is property of actors is referred to as “liveness”.
+There are some other potential benefits to actors. Having access to their own inboxes allows for interesting SEDA-style scaling possibilities, for example.  And being message-based makes the transition from single-process or single-machine to multi-process and multi-machine somewhat natural, where a traditional app will require a service layer of some sort. Actors impose a “message routing” step which can be a convenient place to put logic around failover, distribution, scaling, and probably other things I’m not thinking of.  Many actor frameworks allow for supervisor hierarchies, which offer a fault-tolerance mechanism, and a hot code replacement mechanism for in-place upgrades. The designers of Erlang knew what they were doing. </p>
+
+<p>But the first advantage – they’re simple to reason about in concurrency terms – comes at a cost:  they are simple to reason about because they are effectively using class-level locking. The most difficult part of getting traditional concurrency right is knowing what to lock, and locking it for only as long as you need it (and no longer). The actor pattern gets around that by effectively locking everything in the class – only one thing will be executing on that actor at a time, ever – and locking it for the entire duration of the method call. This works out in many situations because of the liveness advantage – yes, the lock is coarse, but callers don’t have to wait to acquire the lock. They just drop the message in the actor’s mailbox and continue on. So if all you’re looking for is simpler concurrency, and you don’t intend on taking advantage of the other benefits in your architecture, you are free to choose between actors and the coarsest of locks, at your preference. At the moment, you’re likely to get more sneers by using coarse-level locking, but that’s a psychological phenomenon of programming trends more than a real reflection on the merits of the pattern.</p>
+
+<p>On a similar note, but more of a no-brainer:  if:  1.) all you’re looking for is simpler concurrency, and 2.) you’re not going to take advantage of the other benefits in your architecture, and 3.) there is a ready-made concurrent data structure available to you, that concurrent data structure will beat an actor every time. </p>
+
+<p>That raises a question that probably merits another post: if you’re considering using actors to replace a concurrent data structure, are you thinking about them all wrong?  On the one hand, it seems quite consistent with most descriptions of actors I see: they’re to be used to hide mutable state.  A map (that’s used as a cache, for example) might be mutable, so to handle concurrent access to it, you place it inside an actor. This is exactly the use case that’s described by <something>, <something else="">, and <something else="">. And in this particular example, if the additional benefits of actors (supervisor hierarchies, mailbox introspection, possibly distributed routing …) aren’t immediately useful, then it’s hard to argue for an actor-based approach rather than, say, a ConcurrentHashMap. ConcurrentHashMap is a beautiful data structure – the lock-striping logic is far more sophisticated than anything you’re likely to write, and it’s already written and ready to use. So, all else being equal: use it. </something></something></something></p>
+
+<p>This leads to an interesting psychological phenomenon caused by the cachet of various technologies: 
+The problem is, using this kind of coarse-grained locking feels dirty.  Looking at this, you just KNOW that it could be much better. So it’s very hard to leave it like this. And for good reason: with minimal effort, it could perform significantly better under heavy concurrency.
+But if you implemented the same thing with actors, it’d seem somewhat elegant. Actors are cool. Even though, from a concurrency standpoint, they are equivalent.</p>
+
+<h2 id="our-cache-example">Our Cache Example</h2>
+
+<p>Here’s some steps you might go through when designing a cache. </p>
+
+<p>First, you’d set out your interface. In this case we’ll pick a very simple interface – you can get a value, set a value, remove a value, and get a list of all keys. We’re using the last one mainly for logging in our test class. </p>
+
+<p>The first example you might write looks like this: </p>
+
+<p>This is what I’ll call “class-level locking” or “lock the world” – essentially, the class has one lock, and any method call of consequence has to acquire that lock. </p>
+
+<p>That’s really not bad. But if you’d spent some time looking at java.util.concurrent, you might see some other options that were slightly more sophisticated. Perhaps you’d notice that half of your methods were doing writes, and half were just doing reads – and reads don’t really need to block other reads. So you replace the lock with a ReadWriteLock. </p>
+
+<p>Or perhaps you realize that you can just synchronize access to the data structure itself: </p>
+
+<p>And finally, you might replace this synchronized HashMap (which is, itself, rather coarse in its Java implementation) with a ConcurrentHashMap.  This is a really sophisticated concurrent data structure, which divides the map into a series of stripes which each have their own lock, so a “put” or “get” only locks a portion of the map at a time.  That implementation might look like this: </p>
+
+<p>Future:  Infinispan (claims to have a “mostly lock-free core”, which leads me to believe it uses spin-locking. But I know that in distributed operation it uses striped locks by default, and can be configured for per-key locks. 
+I’d like to plug in some other caches like Hazelcast, as well.</p>
+
+<p>b)	Now, here’s how they perform under load.
+The test class is here, if you’re curious.  Basically, it’s going to run one test thread per CPU on the test machine, run the SimpleLockCache once first for warm-up, then run a whole mess of iterations of “get” and “put”, at a ratio of 2 to 1. </p>
+
+<p>i)	8 threads, Macbook Pro
+ii)	X threads, Amazon EC2 instance.</p>
+
+<p>c)	Now, here’s an actor implementation</p>
+
+<p>Now, here’s the simplest possible actor implementation.  This is borrowed from the Lift framework (here), and adapted for this interface.  It’s simply using an actor to guard access to a HashMap:</p>
+
+<p>d)	Here’s how it performs under load
+i)	8 threads, Macbook Pro
+ii)	X threads, Amazon EC2 instance.</p>
+
+<p>Perhaps unsurprisingly, it does a bit worse than our class-level locking example. And that’s because, of course, it <em>is</em> class-level locking.  It’s synchronizing the whole class, such that only one caller will ever be able to execute on the thread at a time.  Whereas the other semaphore-based examples allowed for multiple threads to execute concurrently in some situations, that can never happen in the actor-based example. Never. It will only ever process one message at a time. </p>
+
+<p>In semaphore-based concurrency, class-level locking is considered crude. And it is. Since the class-level locking in an actor is hidden, it doesn’t come across as crude – at least, not to those of us who don’t use actors much. Perhaps because we just haven’t been trained yet to look at this and see “Whoa, bottleneck!”</p>
+
+<p>I wonder if, when it becomes normal to look at this and say, “Well, obviously, you’ll want to spawn child actors to offer multithreaded access to this data structure, otherwise it’s a bottleneck…”  that we’ll start saying, “man, actor concurrency is hard…there must be a better way”. Perhaps all “next big thing” panaceas are just the result of us not yet seeing the complications…eventually, we get used to the good things but notice the pain points more and more…  and this is starting to sound like an old marriage, so I’ll stop.</p>
+
+<p>Now, again – this is synchronous. Ideal actor architectures are asynchronous. But that doesn’t matter here – whether the calling thread was dutifully waiting for the message to return, or whether it was going about other business, it will still take a the same amount of time to process the thread because it’s a bottleneck.  And it’s silly to think that you’re not, at some point, going to need the results from that call somehow. Bottlenecks matter just as much in actor frameworks. So you need to deal with the bottleneck. </p>
+
+<p>The one advantage that actor concurrency has (that I’m aware of) is “liveness”. That is, if this were an asynchronous system, and if the cache was very backed up (lots of attempted concurrent accesses) then a call to the backed-up actor would return immediately, no matter how many other concurrently attempted accesses there were. That’s because the call to the actor is really just placing a message in its inbox; placing that message can occur quickly and return. The semaphore-based alternative would block, since the actual execution was happening in the caller’s thread. The actor would implicitly be executed in a different thread, so you gain that advantage.  And in a highly-contested, asynchronous system, that could be significant. In a synchronous environment (which a cache will always be), there’s no difference – the caller has to wait for the result, so the liveness advantage is lost. </p>
+
+<p>h.     The way you deal with bottlenecks, though, is different in an actor-based system.
+3.)  So, basic actor concurrency looks like class-level lcoking in a semaphore-based system, but with benefits. To reiterate: it has some advantages:
+a.     Advantages….
+4.)  Next: I’ll stumble through some attempts to improve the cache, based on the same principles that worked so well in the semaphore-based version. 
+a.     If anyone has an already-written one out there, let me know, I’ve looked and haven’t found one.</p>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Matt Hoffman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-12T00:00:00-05:00" pubdate data-updated="true">Mar 12<span>th</span>, 2011</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://matthoffman.github.com/blog/2011/03/12/actor-concurrency/" data-via="matt_thinks_so" data-counturl="http://matthoffman.github.com/blog/2011/03/12/actor-concurrency/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/" title="Previous Post: Cluster Management and Task Distribution: Zookeeper vs. JGroups">&laquo; Cluster Management and Task Distribution: Zookeeper vs. JGroups</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/05/15/cluster-management-and-task-distribution-part-2/" title="Next Post: Cluster Management and Task Distribution part 2: Caching">Cluster Management and Task Distribution part 2: Caching &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/10/06/complexity/">In Defense of Easy</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/28/try-server/">Takes too long to build your project? Try harder.</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/24/greasemonkey/">Greasemonkey is Underrated</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/11/05/cluster-management-and-task-distribution-part-3/">Cluster Management and Task Distribution, part 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/05/15/cluster-management-and-task-distribution-part-2/">Cluster Management and Task Distribution part 2: Caching</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/matthoffman">@matthoffman</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'matthoffman',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("matt_thinks_so", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/matt_thinks_so" class="twitter-follow-button" data-show-count="false">Follow @matt_thinks_so</a>
+  
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Matt Hoffman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'mattthinksso';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>on the cusp of Big Data - matt thinks so</title>
+  <title>Cluster Management and Task Distribution, part 3 - matt thinks so</title>
   <meta name="author" content="Matt Hoffman">
 
   
-  <meta name="description" content="Alternate title: Episode IV: A New Hope I&#8217;m restarting this blog after a long hiatus &#8211; a couple of years, at least. It looks like my old &hellip;">
+  <meta name="description" content="Summary This is a followup to my Zookeeper vs. Jgroups post, and the Hazelcast addendum. I ended up needed caching before I needed cluster management &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data/">
+  <link rel="canonical" href="http://matthoffman.github.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/">
   <link href="/favicon.ico" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -89,7 +89,7 @@
   
   <header>
     
-      <h1 class="entry-title">On the Cusp of Big Data</h1>
+      <h1 class="entry-title">Cluster Management and Task Distribution, Part 3</h1>
     
     
       <p class="meta">
@@ -105,25 +105,48 @@
   
 
 
-<time datetime="2009-12-19T00:00:00-05:00" pubdate data-updated="true">Dec 19<span>th</span>, 2009</time>
+<time datetime="2011-11-05T00:00:00-04:00" pubdate data-updated="true">Nov 5<span>th</span>, 2011</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><i>Alternate title:</i> <b>Episode IV: A New Hope</b>
+<div class="entry-content"><h2>Summary</h2>
 
-<p>I&#8217;m restarting this blog after a long hiatus &#8211; a couple of years, at least.  It looks like my old posts were purged in the meantime, but that&#8217;s probably for the best<a name="to1" href="#1"><sup>1</sup></a>.  My musings about Hibernate from 2007 are probably not that interesting now<a name="to2" href="#2"><sup>2</sup></a>.</p>
-<p>Where I&#8217;m coming from:</p>
-<p>I work on a team that, in a lot of ways, is on the cusp of Big Data:  we deal with gigabytes, but not terabytes of data, and we don&#8217;t have endless racks of commodity servers.  We have a homegrown task framework that follows a typical master-worker pattern and allows for tasks to be distributed among nodes on different servers.  That works well, and I like the framework in general &#8211; it could use some cleaning up, but it&#8217;s simple, clean and functional.</p>
-<p>Data, though, is all stored inside an Oracle database, and we&#8217;re knocking at the edge of it&#8217;s capabilities.  We haven&#8217;t entirely maxed it out yet, but each performance gain has been harder to come by, and we can easily see the time approaching where it will be cheaper to rearchitect how we&#8217;re storing and serving data rather than eke more performance by smarter partitioning, better queries, or a faster SAN.</p>
-<p>So over the past several months I&#8217;ve been reading about some of the competitors in the big-data field, and sketching ideas for what I&#8217;d like our architecture to look like going forward.  Things like MapReduce (Hadoop), HBase, Cassandra, or Terracotta, or a number of other ideas &#8211; different types of products, all with the goal of scaling data beyond a single server.  But unlike a lot of folks looking at these options, we have an existing product in production, based on a framework that does 80% of what we need.  So I find myself on a seesaw, going between the newest, coolest thing I&#8217;ve read about, and then the pain of rewriting what we have on a non-existent timeline when what we have works so well &#8211; at today&#8217;s data volumes.</p>
-<p>I decided to reinstate this blog to collect what I&#8217;ve learned so far.</p>
-<p/>
-<p/>
-<p><a name="1" href="#to1"><sup>1</sup></a> Does anyone else have the problem of starting blogs like new years&#8217; resolutions and then losing track of them?  I probably have three out there, tied to some forgotten username on goodness knows which host, and they&#8217;re probably saying very insightful things about Hibernate 2.0.</p>
-<p><a name="2" href="#to2"><sup>2</sup></a> Turns out, I did recover some old posts from a Typo blog from 2006.  A couple of the most boring just didn&#8217;t make the move over, but most of them are here for morbid curiosity about what seemed interesting at the time.</p>
+This is a followup to my <a href="/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">Zookeeper vs. Jgroups </a>post, and the <a href="/2011/05/15/cluster-management-and-task-distribution-part-2.html">Hazelcast addendum</a>.
+
+<p>I ended up needed caching before I needed cluster management, so after evaluating a few options I implemented a caching facade that could switch between Hazelcast and Infinispan (which is based on Jgroups).  I&#8217;ve been really impressed with Hazelcast so far – no major problems. We did hit a bug with 1.9.2, but found that a patch release with a fix was already out. 
+
+<p>It also has a convenient cluster service built in, so for our cluster management needs, it&#8217;s likely to win for us, provided we don&#8217;t run across any more problems in testing. The interfaces are easy and intuitive, and I don&#8217;t really have anything to complain about – except that there aren&#8217;t many heavy hitters that are openly using it. 
+
+
+<h2>Conclusion</h2>
+
+<p>For our particular set of requirements, Hazelcast appears to be the winner: 
+
+<ul>
+<li>it provides several things we need (distributed data structures, cache, cluster management)</li>
+<li>it&#8217;s easy to use</li>
+<li>it&#8217;s easy to hide behind a set of facades so that we can switch it out if necessary</li>
+<li>it&#8217;s very simple to configure for different client scenarios (it works on EC2, for example)</li> 
+<li>it&#8217;s worked well in testing</li>
+</ul>
+
+But if our requirements were different, I think Zookeeper would have been my choice. Specifically:
+
+
+<ul>
+<li>If I were coordinating more than a handful of servers – say, 50 or more – I&#8217;d go with Zookeeper. It was specifically made for coordinating large numbers of servers reliably. And it&#8217;s now the de-facto standard for that purpose: Facebook, Twitter, LinkedIn, and a lot of others are all using it for node management across large numbers of nodes. At that scale I don&#8217;t want to roll my own if I don&#8217;t have to. </li>
+
+<li>If I owned installation and maintenance. The deployment complications of Zookeeper are one of the main downsides for our purpose; it&#8217;s another server to install and manage, which raises the operational footprint of our app. If we were running the app only within our own datacenter, no big deal – there are Puppet or Chef recipes to install it, and even pre-built EC2 images. That&#8217;s a very manageable hurdle. But we&#8217;re handing the app over to clients to install and manage, and Zookeeper adds more hardware requirements and an installation process that is good for at least a few more pages in the install guide. Hazelcast, on the other hand, adds just one line to a property file (cluster.nodes=x,y,z). Be kind to your ops teams.</li>
+</ul>
+
+There are probably also cases where JGroups is the right answer. It&#8217;s main advantage is its configurability – you can put together a nearly infinite combination of protocols stacks to suit various purposes. Check out the comments of <a href="/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">my first post</a>, for example, for sample code to handle node discovery in a non-multicast (e.g. EC2) environment. But if all you need is cluster management and some pretty typical services on top of that, there are simpler options.
+
+
+I&#8217;m going to be honest – after looking into Zookeeper closely, I&#8217;m looking for excuses to use it.  But I don&#8217;t think that will happen right away. 
+
 </div>
 
 
@@ -146,7 +169,7 @@
   
 
 
-<time datetime="2009-12-19T00:00:00-05:00" pubdate data-updated="true">Dec 19<span>th</span>, 2009</time>
+<time datetime="2011-11-05T00:00:00-04:00" pubdate data-updated="true">Nov 5<span>th</span>, 2011</time>
       
 
 
@@ -154,7 +177,7 @@
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data/" data-via="matt_thinks_so" data-counturl="http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://matthoffman.github.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/" data-via="matt_thinks_so" data-counturl="http://matthoffman.github.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/" >Tweet</a>
   
   
   
@@ -163,10 +186,10 @@
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2006/09/13/ssl-curiosity/" title="Previous Post: SSL curiosity">&laquo; SSL curiosity</a>
+        <a class="basic-alignment left" href="/blog/2011/05/15/cluster-management-and-task-distribution-part-2/" title="Previous Post: Cluster Management and Task Distribution part 2: Caching">&laquo; Cluster Management and Task Distribution part 2: Caching</a>
       
       
-        <a class="basic-alignment right" href="/blog/2010/03/05/oh-oracle/" title="Next Post: Oh, Oracle">Oh, Oracle &raquo;</a>
+        <a class="basic-alignment right" href="/blog/2012/01/24/greasemonkey/" title="Next Post: Greasemonkey is Underrated">Greasemonkey is Underrated &raquo;</a>
       
     </p>
   </footer>
