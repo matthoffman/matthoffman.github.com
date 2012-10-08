@@ -2,6 +2,9 @@
 title: The Love-Hate of JiBX
 layout: post 
 summary: where I muse about JiBX, an XML-Object mapper, and whether writing binding files is any better than writing translation layers
+categories: old
+veryold: true
+tag: XML
 ---
 
 Ok, I love JiBX's flexibility.  I have two different versions of an existing schema that I'm mapping to the same Java object, which is the same Java object I'm then storing in Hibernate.  This is the first time I've been able to use the same domain object throughout the application, and I love it.  No more relying on framework-generated objects, and no more translation layers.

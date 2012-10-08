@@ -2,6 +2,9 @@
 title: SSL curiosity
 layout: post
 summary: where I mention a particular error with locally-signed SSL certs
+veryold: true
+categories: old
+
 ---
 Ok, perhaps this isn't a curiosity to you all.  Perhaps everyone knew this.  But I didn't, and I didn't find it in a quick Google search, so I thought I'd put it out here.    
 

@@ -2,6 +2,9 @@
 title: For the record...
 layout: post 
 summary: where I point out that hand-writing STaX serializers is very verbose
+categories: old
+veryold: true
+tags: XML
 ---
 
 For the record, a custom STaX serializer and deserializer for a moderately small object graph will run you about 1000 lines of code. 

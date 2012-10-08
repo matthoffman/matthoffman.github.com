@@ -2,6 +2,9 @@
 title: Perhaps I'm missing something...
 layout: post 
 summary: where I rant briefly about Axis2
+tags: XML
+categories: old
+veryold: true
 ---
 
 I've been playing with Axis2 for a couple of days.  One of the features that they boast (and added to XFire's [SOAP Stack Comparison](http://xfire.codehaus.org/Stack+Comparison)) is hot-deployable services. 
