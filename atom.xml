@@ -1,121 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
 
-<!DOCTYPE html>
-<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
-<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
-<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  <title>matt thinks so</title>
-  <meta name="author" content="Matt Hoffman">
-
-  
-  <meta name="description" content="the setup I watched Rich Hickey’s talk from Strange Loop called “Simple Made Easy”, which has been making the rounds recently1. He’s a great speaker &hellip;">
-  
-
-  <!-- http://t.co/dKP3o1e -->
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  
-  <link rel="canonical" href="http://matthoffman.github.com/">
-  <link href="/favicon.ico" rel="icon">
-  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <script src="/javascripts/modernizr-2.0.js"></script>
-  <script src="/javascripts/ender.js"></script>
-  <script src="/javascripts/octopress.js" type="text/javascript"></script>
-  <link href="/atom.xml" rel="alternate" title="matt thinks so" type="application/atom+xml">
-  <!-- bring in the Droid Sans font from Google --> 
-<link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold' rel='stylesheet' type='text/css'>
-<!-- a couple others that Octopress uses by default --> 
-<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-
-
-  
-  <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-21082916-1']);
-    _gaq.push(['_trackPageview']);
-
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-  </script>
-
-
-</head>
-
-<body   >
-  <header role="banner">    <div id="title" class="title">
-      <div id="titletext" class="titletext">
-        <h1>
-          <a href="/">
-            <img src="/images/lightbulb_dim_small.png" border="0" height="80" width="80"/>
-            <span id="namefirst">matt</span>
-            <span id="namemiddle">thinks</span>
-            <span id="namelast">so</span><span id="namepre">&hellip;</span>
-           </a>
-        </h1>
-      </div>
-    </div>
-
-</header>
-  <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
-  
-</ul>
-  
-<form action="http://google.com/search" method="get">
-  <fieldset role="search">
-    <input type="hidden" name="q" value="site:matthoffman.github.com" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
-  </fieldset>
-</form>
-  
-<ul class="main-navigation">
-  <li><a href="/">Blog</a></li>
-  <li><a href="/about.html">About</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
-</ul>
-
-</nav>
-  <div id="main">
-    <div id="content">
-      <div class="blog-index">
-  
-  
-  
-    <article>
-      
-  <header>
+  <title><![CDATA[matt thinks so]]></title>
+  <link href="http://matthoffman.github.com/atom.xml" rel="self"/>
+  <link href="http://matthoffman.github.com/"/>
+  <updated>2012-10-08T03:50:09-04:00</updated>
+  <id>http://matthoffman.github.com/</id>
+  <author>
+    <name><![CDATA[Matt Hoffman]]></name>
     
-      <h1 class="entry-title"><a href="/blog/2012/10/06/complexity/">In Defense of Easy</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
 
   
-
-
-<time datetime="2012-10-06T00:00:00-04:00" pubdate data-updated="true">Oct 6<span>th</span>, 2012</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2 id="the-setup">the setup</h2>
+  <entry>
+    <title type="html"><![CDATA[In Defense of Easy]]></title>
+    <link href="http://matthoffman.github.com/blog/2012/10/06/complexity/"/>
+    <updated>2012-10-06T00:00:00-04:00</updated>
+    <id>http://matthoffman.github.com/blog/2012/10/06/complexity</id>
+    <content type="html"><![CDATA[<h2 id="the-setup">the setup</h2>
 
 <p>I watched Rich Hickey’s talk from Strange Loop called <a href="http://www.infoq.com/presentations/Simple-Made-Easy">“Simple Made Easy”</a>, which has been making the rounds recently<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. He’s a great speaker, and always makes interesting points. But something in that talk didn’t sit right with me<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>. While his slide about Development Speed (“emphasizing ease gives early speed…ignoring complexity will slow you down over the long haul”) really struck a chord<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>, it felt like he was shortchanging “easy” in favor of “simple”<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup>.  This, then, is my long, somewhat circuitous exposition on that thought.</p>
 
@@ -267,42 +170,15 @@ In case you haven’t watched it, here’s the rough paraphrase of the definitio
     </li>
   </ol>
 </div>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/">Cluster Management and Task Distribution: Zookeeper vs. JGroups</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-01-29T00:00:00-05:00" pubdate data-updated="true">Jan 29<span>th</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><div>
+  <entry>
+    <title type="html"><![CDATA[Cluster Management and Task Distribution: Zookeeper vs. JGroups]]></title>
+    <link href="http://matthoffman.github.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/"/>
+    <updated>2011-01-29T00:00:00-05:00</updated>
+    <id>http://matthoffman.github.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups</id>
+    <content type="html"><![CDATA[<div>
 <h2 id="internal-source-marker_0.6950423333328217">The question</h2>
 Which technology stack makes more sense for a distributed task-management framework?
 <h2>The backstory</h2>
@@ -408,42 +284,15 @@ With guaranteed message delivery, we could have consistent in-memory views of th
 </div>
 <h2>Conclusion</h2>
 &#8230;tbd&#8230;
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/12/10/on-configuration/">On Configuration</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2010</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content">I&#8217;ve been musing recently on how to scale our configuration system up and out: making it work more dynamically for single nodes, and handle multiple nodes&#8230;well, at all.
+  <entry>
+    <title type="html"><![CDATA[On Configuration]]></title>
+    <link href="http://matthoffman.github.com/blog/2010/12/10/on-configuration/"/>
+    <updated>2010-12-10T00:00:00-05:00</updated>
+    <id>http://matthoffman.github.com/blog/2010/12/10/on-configuration</id>
+    <content type="html"><![CDATA[I&#8217;ve been musing recently on how to scale our configuration system up and out: making it work more dynamically for single nodes, and handle multiple nodes&#8230;well, at all.
 <h2>How it works now</h2>
 Right now, our configuration is spread across the following places, roughly in order of precedence:
 <ul>
@@ -501,83 +350,29 @@ Of course, the project is all but dead &#8211; last updated 2008 &#8211; but how
 </ul>
 
 I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distributed configuration?
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/03/05/oh-oracle/">Oh, Oracle</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-03-05T00:00:00-05:00" pubdate data-updated="true">Mar 5<span>th</span>, 2010</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>So, I was responsible for a pretty unfortunate bug today — no way around it, I messed up.  It was classic — there was a &#8220;TODO&#8221; block where I meant to come back and finish some code, and no doubt got distracted by some very valid crisis. </p> 
+  <entry>
+    <title type="html"><![CDATA[Oh, Oracle]]></title>
+    <link href="http://matthoffman.github.com/blog/2010/03/05/oh-oracle/"/>
+    <updated>2010-03-05T00:00:00-05:00</updated>
+    <id>http://matthoffman.github.com/blog/2010/03/05/oh-oracle</id>
+    <content type="html"><![CDATA[<p>So, I was responsible for a pretty unfortunate bug today — no way around it, I messed up.  It was classic — there was a &#8220;TODO&#8221; block where I meant to come back and finish some code, and no doubt got distracted by some very valid crisis. </p> 
 <p>Fortunately, it was caught before it affected production data, but it was in test, and visible, and it was scary that it had gotten that far.</p>
 <p>But I couldn&#8217;t help but be bitter about how that block of code came to be in the first place:  the code that contained the bug was part of an elaborate scheme designed to work around joining to a particularly large table in certain circumstances.</p>
 <p>Now, it’s big data (well, at least tens of millions of rows) …we have to do what we can for efficiency.  But it made me slightly bitter that the more we optimize for relational databases, trying to eke more and more performance, the farther we move from a clear data model, and the less we&#8217;re using the &#8220;R&#8221; in RDBMS. We go through contortions, and in the process introduce bugs.</p> 
 <p>I’m not sure who that might be a lesson for, but perhaps if anyone is dead-set on using a tried-and-true RDBMS to avoid bugs in newer systems, whether MapReduce or a “NoSQL” store, it’s worth noting that there is some tradeoff here:  bugs in the data store in question vs. bugs you introduce into your own code due to the increased complexity as you contort your data model to make it scale where you need it to go.</p>
  
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2009/12/19/on-the-cusp-of-big-data/">On the Cusp of Big Data</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2009-12-19T00:00:00-05:00" pubdate data-updated="true">Dec 19<span>th</span>, 2009</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><i>Alternate title:</i> <b>Episode IV: A New Hope</b>
+  <entry>
+    <title type="html"><![CDATA[on the cusp of Big Data]]></title>
+    <link href="http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data/"/>
+    <updated>2009-12-19T00:00:00-05:00</updated>
+    <id>http://matthoffman.github.com/blog/2009/12/19/on-the-cusp-of-big-data</id>
+    <content type="html"><![CDATA[<i>Alternate title:</i> <b>Episode IV: A New Hope</b>
 
 <p>I&#8217;m restarting this blog after a long hiatus &#8211; a couple of years, at least.  It looks like my old posts were purged in the meantime, but that&#8217;s probably for the best<a name="to1" href="#1"><sup>1</sup></a>.  My musings about Hibernate from 2007 are probably not that interesting now<a name="to2" href="#2"><sup>2</sup></a>.</p>
 <p>Where I&#8217;m coming from:</p>
@@ -589,42 +384,15 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 <p/>
 <p><a name="1" href="#to1"><sup>1</sup></a> Does anyone else have the problem of starting blogs like new years&#8217; resolutions and then losing track of them?  I probably have three out there, tied to some forgotten username on goodness knows which host, and they&#8217;re probably saying very insightful things about Hibernate 2.0.</p>
 <p><a name="2" href="#to2"><sup>2</sup></a> Turns out, I did recover some old posts from a Typo blog from 2006.  A couple of the most boring just didn&#8217;t make the move over, but most of them are here for morbid curiosity about what seemed interesting at the time.</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/09/13/ssl-curiosity/">SSL Curiosity</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-09-13T00:00:00-04:00" pubdate data-updated="true">Sep 13<span>th</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Ok, perhaps this isn’t a curiosity to you all.  Perhaps everyone knew this.  But I didn’t, and I didn’t find it in a quick Google search, so I thought I’d put it out here.    </p>
+  <entry>
+    <title type="html"><![CDATA[SSL curiosity]]></title>
+    <link href="http://matthoffman.github.com/blog/2006/09/13/ssl-curiosity/"/>
+    <updated>2006-09-13T00:00:00-04:00</updated>
+    <id>http://matthoffman.github.com/blog/2006/09/13/ssl-curiosity</id>
+    <content type="html"><![CDATA[<p>Ok, perhaps this isn’t a curiosity to you all.  Perhaps everyone knew this.  But I didn’t, and I didn’t find it in a quick Google search, so I thought I’d put it out here.    </p>
 
 <p>I’m working on a project that uses 2-way (client-auth) SSL; in doing so, I’ve created a test root CA and used it to generate an array of test certs for clients and servers. I’ve done a bit of testing on my local PC, and it’s working well; the server uses client certificates for authentication and authorization of web service requests, and so on. Acegi is our friend. </p>
 
@@ -633,124 +401,43 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 <p>After fiddling a bit, it turns out that adding the test CA to my Trusted Root Certificate Authorities list fixed the problem.  Honestly, I’m not sure why this would be necessary, if Internet Explorer had already asked me whether to accept the site’s certificate, but my best guess is that IE was simply ignoring my answer and refusing to load the site whose certificate was signed with an unknown root CA.   </p>
 
 <p>Again, maybe this is a known bug, but hey, I thought I’d throw it out there.  Adding the test CA to IE’s “trusted root certificates” list fixed the problem.</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/06/16/jamon/">Another Library</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-06-16T00:00:00-04:00" pubdate data-updated="true">Jun 16<span>th</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I’ve been teased that my current project has more external libraries than it does actual lines of code.  Now, I’m not convinced that’s a bad thing – I’ve said before that the hardest thing about leaving Java for some other language would be giving up all of the 3rd-party libraries and projects that do 90% of your work for you. </p>
+  <entry>
+    <title type="html"><![CDATA[Another library]]></title>
+    <link href="http://matthoffman.github.com/blog/2006/06/16/jamon/"/>
+    <updated>2006-06-16T00:00:00-04:00</updated>
+    <id>http://matthoffman.github.com/blog/2006/06/16/jamon</id>
+    <content type="html"><![CDATA[<p>I’ve been teased that my current project has more external libraries than it does actual lines of code.  Now, I’m not convinced that’s a bad thing – I’ve said before that the hardest thing about leaving Java for some other language would be giving up all of the 3rd-party libraries and projects that do 90% of your work for you. </p>
 
 <p>Today’s is JAMon, a small library with a really simple purpose: keep track of performance statistics. I’ve written static classes or singletons that keep track of min, max and average times for various things on several projects; this just keeps me from having to write it again. Not saving a ton of time, but saving some. And <a href="http://iremia.univ-reunion.fr/intranet/wiki/Wiki.jsp?page=SpringJamon">here</a> is a simple step-by-step for integrating it into Spring as an interceptor. There are several discussions out there for how to use JAMon with Spring, and whether Spring’s built-in JAMon interceptor (is there anything Spring <em>doesn’t</em> have built in?) should use logging semantics to activate it, but the one above is simply the XML to cut and paste into Appfuse’s Spring config, which is all I really want. I understand what it does, it’s just saving me the five minutes of thinking about it.  Which is what I’m after.  It’s just a beautiful feeling when you want something done, no matter how small, and find that it’s already been done for you.  Like realizing you want another cup of coffee and finding a steaming mug already on your desk.</p>
 
 <p>With that said, I’m going to go make some coffee now… </p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/05/19/axis2/">Perhaps I&#8217;m Missing Something&#8230;</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-05-19T00:00:00-04:00" pubdate data-updated="true">May 19<span>th</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I’ve been playing with Axis2 for a couple of days.  One of the features that they boast (and added to XFire’s <a href="http://xfire.codehaus.org/Stack+Comparison">SOAP Stack Comparison</a>) is hot-deployable services. </p>
+  <entry>
+    <title type="html"><![CDATA[Perhaps I'm missing something...]]></title>
+    <link href="http://matthoffman.github.com/blog/2006/05/19/axis2/"/>
+    <updated>2006-05-19T00:00:00-04:00</updated>
+    <id>http://matthoffman.github.com/blog/2006/05/19/axis2</id>
+    <content type="html"><![CDATA[<p>I’ve been playing with Axis2 for a couple of days.  One of the features that they boast (and added to XFire’s <a href="http://xfire.codehaus.org/Stack+Comparison">SOAP Stack Comparison</a>) is hot-deployable services. </p>
 
 <p>Has anyone ever wanted to hot-deploy a web service? </p>
 
 <p>Really now…</p>
 
 <p>Granted, I’m sure someone could point out the features in some of my projects that no one really wanted. Or, perhaps, someone should point out why in fact this is a killer feature and I’ve just missed it. But it seems particularly weird to me…</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/05/16/for-the-record/">For the Record&#8230;</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-05-16T00:00:00-04:00" pubdate data-updated="true">May 16<span>th</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>For the record, a custom STaX serializer and deserializer for a moderately small object graph will run you about 1000 lines of code. </p>
+  <entry>
+    <title type="html"><![CDATA[For the record...]]></title>
+    <link href="http://matthoffman.github.com/blog/2006/05/16/for-the-record/"/>
+    <updated>2006-05-16T00:00:00-04:00</updated>
+    <id>http://matthoffman.github.com/blog/2006/05/16/for-the-record</id>
+    <content type="html"><![CDATA[<p>For the record, a custom STaX serializer and deserializer for a moderately small object graph will run you about 1000 lines of code. </p>
 
 <p>Just in case you were curious. </p>
 
@@ -759,42 +446,15 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 <p>Correction: it’s now up to 2000.  It also supports another (rather different) schema that is being mapped to the same domain object, which accounts for much of the increase.</p>
 
 <p>Just thought you might be interested. </p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2006/05/01/the-love-hate-of-jibx/">The Love-Hate of JiBX</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2006-05-01T00:00:00-04:00" pubdate data-updated="true">May 1<span>st</span>, 2006</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Ok, I love JiBX’s flexibility.  I have two different versions of an existing schema that I’m mapping to the same Java object, which is the same Java object I’m then storing in Hibernate.  This is the first time I’ve been able to use the same domain object throughout the application, and I love it.  No more relying on framework-generated objects, and no more translation layers.</p>
+  <entry>
+    <title type="html"><![CDATA[The Love-Hate of JiBX]]></title>
+    <link href="http://matthoffman.github.com/blog/2006/05/01/the-love-hate-of-jibx/"/>
+    <updated>2006-05-01T00:00:00-04:00</updated>
+    <id>http://matthoffman.github.com/blog/2006/05/01/the-love-hate-of-jibx</id>
+    <content type="html"><![CDATA[<p>Ok, I love JiBX’s flexibility.  I have two different versions of an existing schema that I’m mapping to the same Java object, which is the same Java object I’m then storing in Hibernate.  This is the first time I’ve been able to use the same domain object throughout the application, and I love it.  No more relying on framework-generated objects, and no more translation layers.</p>
 
 <p>Framework-generated objects are bad for my schemas, which have a lot of nested anonymous complex types (hey, I didn’t write them) which frameworks tend to handle badly.  XMLBeans, for instance, creates nested inner types, which gets very ugly.  It may be personal preference, but that seems very messy; it means one very large object. Hibernate, I imagine, would also be unhappy with that setup. </p>
 
@@ -812,148 +472,12 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 
 <p><i>Update, 2006-05-16:</i></p>
 
-<p>It didn’t stay around. In the end, expressing logic (“if this element… else if this element…”) in XML was too much. I moved over to a hand-rolled STaX serializer and deserializer – see <a href="/2006/05/16/for-the-record.html">“for the record”</a> for a quick peek into the main downside there. </p>
+<p>It didn’t stay around. In the end, expressing logic (“if this element… else if this element…”) in XML was too much. I moved over to a hand-rolled STaX serializer and deserializer – see <a href="http://matthoffman.github.com/2006/05/16/for-the-record.html">“for the record”</a> for a quick peek into the main downside there. </p>
 
 <p>Why I went this route instead of XMLBeans or JAXB merits more discussion.  Briefly, JAXB didn’t meet the performance requirements for this part of the system, and XMLBeans refuses to fully parse the schemas in question. It tries, but something in the deeply nested anonymous complex types gives it fits.  Writing code against those types as they’re generated in XMLBeans is also ugly, but then so is the custom parser. </p>
 
 <p>All in all, I’m coming to terms with the translation layer. But it still feels like it oughtn’t be necessary…  </p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
-<aside class="sidebar">
-  
-    <section>
-  <h1>Recent Posts</h1>
-  <ul id="recent_posts">
-    
-      <li class="post">
-        <a href="/blog/2012/10/06/complexity/">In Defense of Easy</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/">Cluster Management and Task Distribution: Zookeeper vs. JGroups</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2010/12/10/on-configuration/">On Configuration</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2010/03/05/oh-oracle/">Oh, Oracle</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2009/12/19/on-the-cusp-of-big-data/">on the cusp of Big Data</a>
-      </li>
-    
-  </ul>
-</section>
-
-<section>
-  <h1>GitHub Repos</h1>
-  <ul id="gh_repos">
-    <li class="loading">Status updating&#8230;</li>
-  </ul>
-  
-  <a href="https://github.com/matthoffman">@matthoffman</a> on GitHub
-  
-  <script type="text/javascript">
-    $.domReady(function(){
-        if (!window.jXHR){
-            var jxhr = document.createElement('script');
-            jxhr.type = 'text/javascript';
-            jxhr.src = '/javascripts/libs/jXHR.js';
-            var s = document.getElementsByTagName('script')[0];
-            s.parentNode.insertBefore(jxhr, s);
-        }
-
-        github.showRepos({
-            user: 'matthoffman',
-            count: 3,
-            skip_forks: true,
-            target: '#gh_repos'
-        });
-    });
-  </script>
-  <script src="/javascripts/github.js" type="text/javascript"> </script>
-</section>
-
-
-<section>
-  <h1>Latest Tweets</h1>
-  <ul id="tweets">
-    <li class="loading">Status updating&#8230;</li>
-  </ul>
-  <script type="text/javascript">
-    $.domReady(function(){
-      getTwitterFeed("matt_thinks_so", 4, false);
-    });
-  </script>
-  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
-  
-    <a href="http://twitter.com/matt_thinks_so" class="twitter-follow-button" data-show-count="false">Follow @matt_thinks_so</a>
-  
-</section>
-
-
-
-
-
-  
-</aside>
-
-    </div>
-  </div>
-  <footer role="contentinfo"><p>
-  Copyright &copy; 2012 - Matt Hoffman -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
-
-</footer>
-  
-
-<script type="text/javascript">
-      var disqus_shortname = 'mattthinksso';
-      
-        
-        var disqus_script = 'count.js';
-      
-    (function () {
-      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
-      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    }());
-</script>
-
-
-
-
-
-
-
-  <script type="text/javascript">
-    (function(){
-      var twitterWidgets = document.createElement('script');
-      twitterWidgets.type = 'text/javascript';
-      twitterWidgets.async = true;
-      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
-      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
-    })();
-  </script>
-
-
-
-
-
-</body>
-</html>
+</feed>
