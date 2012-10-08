@@ -1,0 +1,31 @@
+// This File is imported last, and will override other styles in the cascade
+// Add styles here to make changes without digging in too much
+
+div#title span#namepre {
+  color: #BBBBBB;
+  letter-spacing: -0.05em;
+}
+div#title span#namefirst {
+  color: #D9D9D9;
+  //color: #3D3B38;
+  //font-weight: bold;
+  letter-spacing: -0.05em;
+}
+div#title span#namemiddle {
+  color: #BB8E35;
+  letter-spacing: -0.05em;
+  text-shadow: 0 0 1.2em white, 0 0 0.5em black;
+  font-weight: normal;
+  //color: #917744;
+}
+div#title span#namelast {
+  letter-spacing: -0.05em;
+  color: #BBB;
+  //font-weight: normal;
+  //color: #BBBBBB;
+}
+div#title img {
+   display:inline;
+   vertical-align:middle;
+}
+

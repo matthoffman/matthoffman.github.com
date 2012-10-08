@@ -1,0 +1,114 @@
+--- 
+layout: post
+title: "Cluster Management and Task Distribution: Zookeeper vs. JGroups"
+summary: "where I try to decide which technology is better for handling distributed data"
+tags: 
+- Big Data
+- Programming
+---
+<div>
+<h2 id="internal-source-marker_0.6950423333328217">The question</h2>
+Which technology stack makes more sense for a distributed task-management framework?
+<h2>The backstory</h2>
+The target app I’m working on at the moment is a task-management framework: it distributes discrete units of work (tasks) to workers which may be spread across multiple servers.  Right now, it’s a single-master system: we can add as many nodes as we want (at runtime, if we want) but only one can ever serve as the “master” node, and that node can’t fail.  The master needs to keep track of a bunch of tasks, which have a hierarchical structure (tasks can have one parent and 0-n child tasks).  It manages the tasks' interdependencies, checks on the health of the worker nodes, and redistributes tasks if they time out or if their worker node goes down.
+A lot of task-management systems put tasks in one or more queues (Resque, beanstalkd, etc.); that’s what we did as well, in our first version.  And this works well; you can model a lot of problem domains this way.  But our task data model is a bit more complex than that, though: tasks can have children, and can define whether those children should be executed in serial or in parallel.  So you can define that task A must execute before task B, but then tasks C through Z can execute in parallel.  When Task B executes, it can decide to split its workload up into 100 smaller tasks, B1 through B100, which all execute in parallel, and would all execute before C starts.  So the tasks end up looking more like a tree than a queue...modeling them as a queue gets a bit convoluted.  You could argue that the best answer would be to re-model our tasks to fit within Resque, beanstalkd, or the like, but at this point that'd actually be more work. And you can't deny this is fun stuff to think about...
+
+So the single point of failure needs to go.  I’m looking at some of the options for instead distributing the data (the tree of tasks, who's executing what, whether the nodes are healthy, whether a task has timed out) across multiple servers.
+<h2>The requirements</h2>
+<ol>
+	<li>Consistency: the task tree should be shared between more than one server, with guaranteed consistency.  I.e if server A is serving as the master node and it goes down, another server needs to be able to pick up and continue, with the exact same view of the current task tree.  We don’t want tasks to accidentally get dropped or executed twice because server B’s version of the task tree wasn't up-to-date.</li>
+	<li>Elasticity: nodes have to be able to come online and participate in the cluster, and then drop off again.  The full list of nodes can’t be hard-coded at startup.</li>
+	<li>Partition-tolerance: Ideally, we should be able to handle a network partition.  We can do that at the expense of availability: that is, if there are 5 nodes, numbered 1 through 5, and nodes 1 and 2 get separated from 3 through 5, it’s OK for 1 and 2 to realize they’re the minority and stop processing.   The following caveats apply:
+<ol>
+	<li>We need a way to handle an intentional reduction in servers.  That is, if we spun up 10 extra cloud servers for a few hours to help in peak processing, we’d need a way to tell the cluster that we were going to spin them back down again, so the remaining nodes didn’t think they were a minority segment of a partitioned network.</li>
+	<li>In case of a catastrophic failure of a majority of servers, I’d like a way to kick the remaining nodes and tell them to process anyway.  But I’m ok if that requires manual intervention... that’s an extreme case.</li>
+</ol>
+</li>
+	<li>Scalability: I’m targeting 100 nodes as a practical maximum.  In production, we’ve used up to 5 nodes.  I don’t expect us to go above 10 in the near future, so I’m adding an order-of-magnitude safety margin on top of that.  Of course, when the task management framework goes open source, 100 nodes will be quite feasible for users with different problem domains and deployment patterns.  In our typical deployment scenarios, customers prefer fewer, larger servers.</li>
+	<li>EC2:  The clustering option has to be able to run on EC2 instances.  It can't depend on IP multicast.</li>
+	<li>Deployment simplicity:   As few moving parts as possible, to make integrating and deploying the software as simple as possible. Our app is often deployed by the client on their hardware, so we'd like to make their lives as easy as possible. And as the framework goes open source, of course, it's going to be more helpful for a more people if it has a low barrier of entry.</li>
+	<li>Implementation simplicity:  The less code I write, the fewer bugs I introduce.</li>
+	<li>Event bus:  nodes can also pass events to other nodes, typically by multicast.  We use JMS for this currently, and we can continue to do so, but it’d be nice to get rid of that particular moving part if possible.</li>
+</ol>
+There is not necessarily a requirement to persist all tasks to disk, in order to keep them safe between server restarts.  In our previous version, tasks were kept in a JMS queue, and we ended up turning disk persistence off -- in practice, in the case of a failure that requires manual intervention (for example, a JMS broker failure, or the failure of all nodes that had tasks in memory) almost always means that we want to manually restart jobs after the system comes back up -- possibly different jobs, possibly a reduced set of tasks to make up time.  We found that we rarely want to start back up exactly where we left off.
+So, if the solution automatically persists to disk, I’ll probably create a way to bypass that if necessary (a command-line flag that lets us clear the current tasks on startup, perhaps).
+<h2>Zookeeper</h2>
+<table><col width="*"></col> <col width="*"></col> 
+<tbody>
+<tr>
+<td>Consistency</td>
+<td>Zookeeper pushes everything to disk -- writes are always persisted, for safety.
+Zookeeper is designed for cluster coordination, and it’s well-thought-out.  It has documented consistency guarantees, lots of documented recipes for things like leader election, and supports subscription of listeners on tree changes.</td>
+</tr>
+<tr>
+<td>Elasticity</td>
+<td>We’d have to pick three servers up front that would serve as Zookeeper nodes as well as normal nodes. Those nodes woulnd’t be elastic, but other nodes could come up and down without a problem.</td>
+</tr>
+<tr>
+<td>Partition-tolerance</td>
+<td>The “live” partition would be defined as “the partition that can still connect with the Zookeeper cluster”.   I have to check on how Zookeeper handles network partitions; I believe it’s just a quorum-based algorithm (if one node is separated from the other two, it stops processing).</td>
+</tr>
+<tr>
+<td>Scalability</td>
+<td>Three Zookeeper nodes could support 100 nodes without a problem, according to anecdotal experience.  At that point, we would have the option of moving the Zookeeper nodes onto dedicated hardware. Having that option is the upside to Zookeeper’s deployment complexity: you can separate them, if there’s a need.</td>
+</tr>
+<tr>
+<td>EC2-friendliness</td>
+<td>Zookeeper uses TCP; it’s been used on EC2 before.</td>
+</tr>
+<tr>
+<td>Deployment Simplicity</td>
+<td>The main downside for Zookeeper is its operational requirements:  two classes of servers (with Zookeeper and without), potentially separate server instances running on Zookeeper-enabled servers, fast disk access required (according to the ZK operations manual, two fast disks -- one for logs, the other for … er..something else.)  That’s a significant increase in operational complexity for a product that is distributed to and maintained by clients.  That also means work necessary for us to make it as turnkey as possible.A Zookeeper-based solution would pick three or five nodes to be Zookeeper nodes as well as task nodes.  Ideally, for Zookeeper’s purposes, it’d be three dedicated servers, but that isn’t going to happen in our architecture.  So Zookeeper will have to coexist with the current app on servers where it’s installed.  For deployment simplicity, I’ll probably need to come up with a way to start up Zookeeper automatically when the server comes up on those nodes. Zookeeper used to not play well as an embedded app (according to some reports from the Katta project); that may be fixed now, but if not I may need to put that logic in the bootstrap script.</td>
+</tr>
+<tr>
+<td>Implementation Simplicity</td>
+<td>Zookeeper would provide a single, shared view of the task tree.  The system would be up as long as the majority of Zookeeper nodes remained up; any node could be leader, as long as they could connect to Zookeeper to view and update the shared state of tasks.   Other nodes could potentially go straight to Zookeeper to query the task tree, if we were comfortable with losing that layer of abstraction.  Either way, it would be simple implementation-wise.</td>
+</tr>
+<tr>
+<td>Event bus</td>
+<td>Zookeeper doesn’t provide events...unless you write events directly to Zookeeper.  It could, however, obviate the need for a lot of events.  For example, we wouldn’t need a “task finished” event if all nodes just set watches on tasks...they’d be automatically notified.  Same with hearbeats, node failure, and so on -- they’d be taken care of by Zookeeper.</td>
+</tr>
+</tbody>
+</table>
+Zookeeper doesn’t list AIX as a supported environment, which is interesting.  We do have to support AIX (unfortunately).
+<h2>JGroups</h2>
+<table><col width="*"></col> <col width="*"></col> 
+<tbody>
+<tr>
+<td>Consistency</td>
+<td>JGroups is a lot more of a DIY solution, although it supports guaranteed message delivery and cluster management out-of-the-box.
+With guaranteed message delivery, we could have consistent in-memory views of the task tree without too much effort; we wouldn’t need to write something that also persisted to disk.</td>
+</tr>
+<tr>
+<td>Elasticity</td>
+<td>I have to look into how elastic JGroups can be without IP multicast.  I know it can work without IP multicast; I just don’t know exactly HOW it works.</td>
+</tr>
+<tr>
+<td>Partition-tolerance</td>
+<td>Good question....</td>
+</tr>
+<tr>
+<td>Scalability</td>
+<td>More speculative, because JGroups has the option for infinite combinations of protocols on its stack.  Worst case, the cluster needs to define two classes of nodes, similar to the Zookeeper implementation: “nodes which can become leaders” and “nodes which can’t.”</td>
+</tr>
+<tr>
+<td>EC2-friendliness</td>
+<td>JGroups can be used on EC2 as long as you use TCP-based “multicast” instead of actual IP multicast.</td>
+</tr>
+<tr>
+<td>Deployment Simplicity</td>
+<td>JGroups would be baked in; worst case, you need to define a couple properties per server (IP of one or more nodes to connect to, and perhaps something like “is this a temporary node”)</td>
+</tr>
+<tr>
+<td>Implementation Simplicity</td>
+<td>More DIY.  The basic protocol stack is provided, along with clustering, leader election, “state transfer” (to bootstrap a new node with a current picture of the task tree) and the lower level; we’d just have to tie it together and fill in the gaps for application-specific needs.</td>
+</tr>
+<tr>
+<td>Event bus</td>
+<td>JGroups can also give us message passing, taking the place of a simple JMS topic.  I have a lot of questions here, though:  how does this handle nodes dropping?  Does it buffer events until the node comes back on?  If so, how do we handle nodes that permanently drop?</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2>Conclusion</h2>
+...tbd...
