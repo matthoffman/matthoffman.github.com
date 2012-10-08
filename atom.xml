@@ -4,7 +4,7 @@
   <title><![CDATA[matt thinks so]]></title>
   <link href="http://www.matt-thinks-so.com/atom.xml" rel="self"/>
   <link href="http://www.matt-thinks-so.com/"/>
-  <updated>2012-10-08T04:12:46-04:00</updated>
+  <updated>2012-10-08T04:19:12-04:00</updated>
   <id>http://www.matt-thinks-so.com/</id>
   <author>
     <name><![CDATA[Matt Hoffman]]></name>
@@ -18,15 +18,18 @@
     <link href="http://www.matt-thinks-so.com/blog/2012/10/08/octopress/"/>
     <updated>2012-10-08T03:59:00-04:00</updated>
     <id>http://www.matt-thinks-so.com/blog/2012/10/08/octopress</id>
-    <content type="html"><![CDATA[<p>I’ve just switched the blog over to <a href="octopress.org">Octopress</a>.  I’ve been using vanilla <a href="https://github.com/mojombo/jekyll">Jekyll</a> for a while to keep up this blog, and I put a bit of effort into configuring it, building up a <a href="http://twitter.github.com/bootstrap/">Bootstrap</a>-based framework and so on. So, why switch? </p>
+    <content type="html"><![CDATA[<p>I’ve just switched the blog over to <a href="octopress.org">Octopress</a>.  I’ve been using vanilla <a href="https://github.com/mojombo/jekyll">Jekyll</a> for a while to keep up this blog, and I put a bit of effort into configuring it, building up a set of <a href="http://twitter.github.com/bootstrap/">Bootstrap</a>-based templates and so on. So, why switch? </p>
 
-<p>At the end of the day, this is a utilitarian site. I’m not going to impress anyone with my design chops – I enjoy graphic design in theory, and I’d like to think that I’m not the absolute worst at it, but I do little enough HTML these days that it takes a long time to get things done. And I’d rather put the time into writing actual content<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. Meanwhile, my site wasn’t displaying terribly well on phones, and Octopress handles mobile devices well out of the box.</p>
+<p>At the end of the day, this is a utilitarian site. I’m not going to impress anyone with my design chops – I enjoy graphic design in theory, and I’d like to think that I’m not the absolute worst at it, but I do little enough HTML these days that it takes a long time to get things done, for end results that are never what I want them to be. And I’d rather put the time into writing actual content<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. Meanwhile, my site wasn’t displaying terribly well on phones, and Octopress handles mobile devices well out of the box. And it’s beautiful to boot<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>. </p>
 
-<p>So, I’m trying it out.  I like it, so far. Thanks <a href="https://github.com/imathis/octopress">Brandon</a>! </p>
+<p>So, I’m impressed so far. Thanks <a href="https://github.com/imathis/octopress">Brandon</a>! </p>
 <div class="footnotes">
   <ol>
     <li id="fn:1">
       <p>Not that, in practice, I’ve been writing actual content.<a href="#fnref:1" rel="reference">&#8617;</a></p>
+    </li>
+    <li id="fn:2">
+      <p>What a <a href="http://english.stackexchange.com/questions/9538/why-do-we-say-to-boot">weird phrase</a>.<a href="#fnref:2" rel="reference">&#8617;</a></p>
     </li>
   </ol>
 </div>
