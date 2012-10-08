@@ -2,6 +2,7 @@
 title: In Defense of Easy
 layout: post
 summary: where I attempt to apply Rich Hickey's "Simple Made Easy" to a current case study
+comments: true
 ---
 
 the setup
