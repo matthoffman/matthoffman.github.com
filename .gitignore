@@ -16,3 +16,18 @@ Icon?
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+
+# octopress ignores
+.bundle
+.DS_Store
+.sass-cache
+.gist-cache
+.pygments-cache
+_deploy
+public
+sass.old
+source.old
+source/_stash
+source/stylesheets/screen.css
+vendor
+node_modules
