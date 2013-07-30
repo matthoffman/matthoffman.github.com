@@ -1,0 +1,327 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Cluster Management and Task Distribution, part 3 - matt thinks so</title>
+  <meta name="author" content="Matt Hoffman">
+
+  
+  <meta name="description" content="Summary This is a followup to my Zookeeper vs. Jgroups post, and the Hazelcast addendum. I ended up needed caching before I needed cluster management &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://www.matt-thinks-so.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/">
+  <link href="/favicon.ico" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="matt thinks so" type="application/atom+xml">
+  <!-- bring in the Droid Sans font from Google --> 
+<link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold' rel='stylesheet' type='text/css'>
+<!-- a couple others that Octopress uses by default --> 
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-21082916-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner">    <div id="title" class="title">
+      <div id="titletext" class="titletext">
+        <h1>
+          <a href="/">
+            <img src="/images/lightbulb_dim_small.png" border="0" height="80" width="80"/>
+            <span id="namefirst">matt</span>
+            <span id="namemiddle">thinks</span>
+            <span id="namelast">so</span><span id="namepre">&hellip;</span>
+           </a>
+        </h1>
+      </div>
+    </div>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:www.matt-thinks-so.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Cluster Management and Task Distribution, Part 3</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-11-05T00:00:00-04:00" pubdate data-updated="true">Nov 5<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>Summary</h2>
+
+This is a followup to my <a href="/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">Zookeeper vs. Jgroups </a>post, and the <a href="/2011/05/15/cluster-management-and-task-distribution-part-2.html">Hazelcast addendum</a>.
+
+<p>I ended up needed caching before I needed cluster management, so after evaluating a few options I implemented a caching facade that could switch between Hazelcast and Infinispan (which is based on Jgroups).  I&#8217;ve been really impressed with Hazelcast so far – no major problems. We did hit a bug with 1.9.2, but found that a patch release with a fix was already out. 
+
+<p>It also has a convenient cluster service built in, so for our cluster management needs, it&#8217;s likely to win for us, provided we don&#8217;t run across any more problems in testing. The interfaces are easy and intuitive, and I don&#8217;t really have anything to complain about – except that there aren&#8217;t many heavy hitters that are openly using it. 
+
+
+<h2>Conclusion</h2>
+
+<p>For our particular set of requirements, Hazelcast appears to be the winner: 
+
+<ul>
+<li>it provides several things we need (distributed data structures, cache, cluster management)</li>
+<li>it&#8217;s easy to use</li>
+<li>it&#8217;s easy to hide behind a set of facades so that we can switch it out if necessary</li>
+<li>it&#8217;s very simple to configure for different client scenarios (it works on EC2, for example)</li> 
+<li>it&#8217;s worked well in testing</li>
+</ul>
+
+But if our requirements were different, I think Zookeeper would have been my choice. Specifically:
+
+
+<ul>
+<li>If I were coordinating more than a handful of servers – say, 50 or more – I&#8217;d go with Zookeeper. It was specifically made for coordinating large numbers of servers reliably. And it&#8217;s now the de-facto standard for that purpose: Facebook, Twitter, LinkedIn, and a lot of others are all using it for node management across large numbers of nodes. At that scale I don&#8217;t want to roll my own if I don&#8217;t have to. </li>
+
+<li>If I owned installation and maintenance. The deployment complications of Zookeeper are one of the main downsides for our purpose; it&#8217;s another server to install and manage, which raises the operational footprint of our app. If we were running the app only within our own datacenter, no big deal – there are Puppet or Chef recipes to install it, and even pre-built EC2 images. That&#8217;s a very manageable hurdle. But we&#8217;re handing the app over to clients to install and manage, and Zookeeper adds more hardware requirements and an installation process that is good for at least a few more pages in the install guide. Hazelcast, on the other hand, adds just one line to a property file (cluster.nodes=x,y,z). Be kind to your ops teams.</li>
+</ul>
+
+There are probably also cases where JGroups is the right answer. It&#8217;s main advantage is its configurability – you can put together a nearly infinite combination of protocols stacks to suit various purposes. Check out the comments of <a href="/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">my first post</a>, for example, for sample code to handle node discovery in a non-multicast (e.g. EC2) environment. But if all you need is cluster management and some pretty typical services on top of that, there are simpler options.
+
+
+I&#8217;m going to be honest – after looking into Zookeeper closely, I&#8217;m looking for excuses to use it.  But I don&#8217;t think that will happen right away. 
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Matt Hoffman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-11-05T00:00:00-04:00" pubdate data-updated="true">Nov 5<span>th</span>, 2011</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://www.matt-thinks-so.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/" data-via="matt_thinks_so" data-counturl="http://www.matt-thinks-so.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/05/15/cluster-management-and-task-distribution-part-2/" title="Previous Post: Cluster Management and Task Distribution part 2: Caching">&laquo; Cluster Management and Task Distribution part 2: Caching</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2012/01/24/greasemonkey/" title="Next Post: Greasemonkey is Underrated">Greasemonkey is Underrated &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/10/08/octopress/">On to Octopress</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/06/complexity/">In Defense of Easy</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/28/try-server/">Takes too long to build your project? Try harder.</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/24/greasemonkey/">Greasemonkey is Underrated</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/11/05/cluster-management-and-task-distribution-part-3/">Cluster Management and Task Distribution, part 3</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/matthoffman">@matthoffman</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'matthoffman',
+            count: 3,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("matt_thinks_so", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/matt_thinks_so" class="twitter-follow-button" data-show-count="false">Follow @matt_thinks_so</a>
+  
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - Matt Hoffman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'mattthinksso';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
