@@ -2,6 +2,7 @@
 title: Takes too long to build your project? Try harder.
 layout: post 
 summary: where I talk, eventually, about setting up Jenkins as a precommit testing server (a "try" server)
+comments: true
 ---
 
 So, we have a problem at work. Well, more than one, perhaps...but one of them is that builds take too long. I've talked to folks I know in different places, and this is a pretty common complaint. But of course, [we have it tough](http://www.youtube.com/watch?v=-eDaSvRO9xA). We have a large codebase and a lot of tests. The compile time for the codebase is one issue; I'll get to that in another blog post. But the test time is worse. 
