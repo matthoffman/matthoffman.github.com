@@ -22,9 +22,9 @@ I'm working on software that I've been involved with for several years. Like a l
 
 The application has gotten to the age where the layers of rapid development are starting to take their toll: new developers coming onto the project complain that the software is just too complex. By 'complex', they mean, "it's hard to wrap my brain around all of the moving parts." Some of the symptoms of this version of 'complexity' include: 
 
-  * it takes a very long time to get new developers up to speed
-  * there are a fair amount of bugs caused by changes made to one part of the application which had downstream impacts on other parts of the application. Since most developers don't have the "big picture" in mind, they don't know they're breaking things when they make changes.
-  * writing new features takes a long time, since the developer needs to know a lot, juggle a lot, and dodge all kinds of pitfalls in order to put something new in place.
+* it takes a very long time to get new developers up to speed
+* there are a fair amount of bugs caused by changes made to one part of the application which had downstream impacts on other parts of the application. Since most developers don't have the "big picture" in mind, they don't know they're breaking things when they make changes.
+* writing new features takes a long time, since the developer needs to know a lot, juggle a lot, and dodge all kinds of pitfalls in order to put something new in place.
 
 When I interviewed developers about where the problems were, I got answers like this: 
 
@@ -55,7 +55,8 @@ definitions
 -----------
 
 Now that I've butchered psychology and complexity science, I'll move on to butcher Rich Hickey's talk. 
-In case you haven't watched it, here's the rough paraphrase of the definitions that he bases his thesis around:  
+In case you haven't watched it, here's the rough paraphrase of the definitions that he bases his thesis around:
+
 * "complex" means combining two or more things ("complecting"). 
 * "simple" means "concerned with only one thing". 
 * "easy" means "lie near" or "close at hand".  Relative to the speaker. 
@@ -146,7 +147,7 @@ There are many, many more. Feel free to tell me your "obviously, you should be d
 finally, a conclusion
 ----------------
 
-I think Rich Hickey's division between "simple" and "easy" is useful and instructive...but I think that many of the things that we care about in designing simpler software that falls into what he would call "easy", rather than "simple". And if you have a nontrivial number of components, with interactions that will not easily fit within a developer's working memory until they've done a significant amount of synthesis... don't discount easy. It can save you from that 3AM page. 
+I think Rich Hickey's division between "simple" and "easy" is useful and instructive...but I think that many of the things that we care about in designing simpler software that falls into what he would call "easy", rather than "simple". And if you have a nontrivial number of components, with interactions that will not easily fit within a developer's working memory until they've done a significant amount of synthesis... don't discount easy. It can save you from that 3AM phone call. 
 
 
 
