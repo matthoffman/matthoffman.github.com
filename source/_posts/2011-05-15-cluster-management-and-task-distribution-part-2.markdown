@@ -6,6 +6,7 @@ tags:
 - Big Data
 - Programming
 draft: true
+comments: true
 ---
 
 <h2>The question</h2>

@@ -1,11 +1,3 @@
----
-title: data mining notes
-layout: post 
-summary: a scratchpad for a presentation on data mining
-published: false
----
-
-
 Two lists on the board: 
 1. Talk about afterward
 2. Talk about later
@@ -94,6 +86,7 @@ About regression
  - want to make it non-linear?  Great, add polynomial features. 
  - been around forever. 
  - of course, super-common
+ - 
 
 Seasonality curves might be a linear regression. But wait, it's not linear? Add some polynomial features. 
 

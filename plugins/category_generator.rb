@@ -19,6 +19,8 @@
 # - category_title_prefix: The string used before the category name in the page title (default is
 #                          'Category: ').
 
+require 'stringex'
+
 module Jekyll
 
   # The CategoryIndex class creates a single category page for the specified category.
@@ -106,12 +108,22 @@ module Jekyll
       if self.layouts.key? 'category_index'
         dir = self.config['category_dir'] || 'categories'
         self.categories.keys.each do |category|
-          self.write_category_index(File.join(dir, category.gsub(/_|\P{Word}/, '-').gsub(/-{2,}/, '-').downcase), category)
+          self.write_category_index(File.join(dir, category.to_url), category)
         end
 
       # Throw an exception if the layout couldn't be found.
       else
-        throw "No 'category_index' layout found."
+        raise <<-ERR
+
+
+===============================================
+ Error for category_generator.rb plugin
+-----------------------------------------------
+ No 'category_index.hmtl' in source/_layouts/
+ Perhaps you haven't installed a theme yet.
+===============================================
+
+ERR
       end
     end
 
@@ -143,7 +155,7 @@ module Jekyll
     def category_links(categories)
       dir = @context.registers[:site].config['category_dir']
       categories = categories.sort!.map do |item|
-        "<a class='category' href='/#{dir}/#{item.gsub(/_|\P{Word}/, '-').gsub(/-{2,}/, '-').downcase}/'>#{item}</a>"
+        "<a class='category' href='/#{dir}/#{item.to_url}/'>#{item}</a>"
       end
 
       case categories.length
@@ -154,6 +166,17 @@ module Jekyll
       else
         "#{categories[0...-1].join(', ')}, #{categories[-1]}"
       end
+    end
+
+    # Outputs a single category as an <a> link.
+    #
+    #  +category+ is a category string to format as an <a> link
+    #
+    # Returns string
+    #
+    def category_link(category)
+      dir = @context.registers[:site].config['category_dir']
+      "<a class='category' href='/#{dir}/#{category.gsub(/_|\P{Word}/, '-').gsub(/-{2,}/, '-').downcase}/'>#{category}</a>"
     end
 
     # Outputs the post.date as formatted html, with hooks for CSS styling.

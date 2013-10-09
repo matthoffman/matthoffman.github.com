@@ -2,6 +2,7 @@
 title: Greasemonkey is Underrated
 layout: post 
 summary: where I wax on about Greasemonkey, a firefox extension for decorating web pages
+comments: true
 ---
 
 I've heard about Greasemonkey a few times over the past few years.  I remember reading a few people wax eloquent about it, mainly how great it is for changing the layout of web pages (like a more convenient [Youtube page](http://userscripts.org/scripts/show/101753), or even changing [Google News back to its old layout](http://userscripts.org/scripts/show/80853)). 
