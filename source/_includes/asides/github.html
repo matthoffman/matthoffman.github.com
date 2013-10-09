@@ -1,6 +1,7 @@
 {% if site.github_user %}
 <section>
   <h1>GitHub Repos</h1>
+  <span class="small">({{site.github_repo_count}} most recent)</span>
   <ul id="gh_repos">
     <li class="loading">Status updating...</li>
   </ul>
@@ -8,7 +9,7 @@
   <a href="https://github.com/{{site.github_user}}">@{{site.github_user}}</a> on GitHub
   {% endif %}
   <script type="text/javascript">
-    $.domReady(function(){
+    $(document).ready(function(){
         if (!window.jXHR){
             var jxhr = document.createElement('script');
             jxhr.type = 'text/javascript';
