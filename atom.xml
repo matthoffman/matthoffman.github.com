@@ -4,21 +4,146 @@
   <title><![CDATA[matt thinks so]]></title>
   <link href="http://www.matt-thinks-so.com/atom.xml" rel="self"/>
   <link href="http://www.matt-thinks-so.com/"/>
-  <updated>2012-10-08T04:19:12-04:00</updated>
+  <updated>2013-10-08T23:57:18-04:00</updated>
   <id>http://www.matt-thinks-so.com/</id>
   <author>
     <name><![CDATA[Matt Hoffman]]></name>
-
+    
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Refactoring and Technical Debt (or, legacy apps have all the fun)]]></title>
+    <link href="http://www.matt-thinks-so.com/blog/2013/10/08/refactoring/"/>
+    <updated>2013-10-08T01:29:00-04:00</updated>
+    <id>http://www.matt-thinks-so.com/blog/2013/10/08/refactoring</id>
+    <content type="html"><![CDATA[<p>There’s a lot of great ideas under the “agile development” umbrella. It now encompasses ideas pulled from older software engineering practices, manufacturing techniques, behavioral science, and goodness knows what else. But any method emphasizes some things at the expense of others, and in my experience a lot of projects have real problems with how to handle significant technical changes — whether they’re called refactoring, or redesign, or technical features — within the context of an agile practice. </p>
 
+<p>I’m not going to solve that here, but I’m going to describe what I’ve seen in case others have answers.</p>
+
+<p>First, for background, typical agile development methods say this about refactoring:</p>
+
+<ol>
+  <li>It should be done continuously.</li>
+  <li>It shouldn’t be called out as its own user story; it should either be done as part of an existing user story, or baked into the “slack” time of an iteration. As you work on any feature, you should clean up the code where you are. “Leave it better than you found it.”</li>
+  <li>Meanwhile, don’t design anything too far in advance (YAGNI), and let them instead emerge over time.</li>
+</ol>
+
+<p>I don’t disagree with that. But I think don’t think it always works quite so neatly. To break it down, let’s classify the “technical work” into three buckets<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>:</p>
+
+<ol>
+  <li>Simple, localized refactors. </li>
+  <li>Larger, system-wide refactors. </li>
+  <li>Non-functional features. </li>
+</ol>
+
+<p>For #1 (Simple, localized refactors), I think everyone agrees. Good development practice dictates that you leave the code better than you found it. If you’re working in some code that needs documentation, or has some complex logic should be broken down into easier-to-understand methods, or there’s some code duplication, clean it up.  There’s no need for a separate user story or ticket; that’s just run-of-the-mill as-you-go refactoring. No arguments there, right? </p>
+
+<p>But there are cases that aren’t so simple, and those are the cases I’ve seen projects have problems with. </p>
+
+<h2 id="larger-cross-feature-refactors">larger, cross-feature refactors.</h2>
+
+<p>These are the refactors that are bigger.  Perhaps you have a repeated data-access pattern that could be abstracted away, or you have three different patterns to do the same basic thing, and they need to be merged into one. This is the kind of thing that NEEDS to be done on a large codebase as time goes by<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>, or it becomes so unweildy that your maintenance time completely overshadows your development time, your new features take months when they used to take weeks, and ramp-up time for new developers is longer their average life expectency.</p>
+
+<p>As an example, I worked on a project a few years back that had started out using Hibernate as its persistence layer. Hibernate was no longer working for us, for a number of reasons, so it was time to ditch it and find something else. To make matters worse, there were a few different attempts at non-Hibernate (or half-Hibernate) DAOs already in the codebase, but each worked differently and handled only a subset of our use cases. We needed to come up with a better solution, and ideally refactor old uses so that our data access patterns were consistent. That was going to take some time.</p>
+
+<p>A lot of people would argue that this is no longer really “refactoring” as much as building a new feature—just an internal, developer-facing feature. I think you could argue it either way, but they each present some challenges for agile shops.</p>
+
+<p>When they are needed, these refactors often fall into a gray area—not as huge as “we need to rewrite the application”, but not as small as “this interface needs some documentation.” This is the gray area that could, potentially, be done as part of a client-facing feature, but in doing so it will probably make that feature take drastically longer.</p>
+
+<p>In this scenario, the iteration planning or grooming conversation might look like this: </p>
+
+<blockquote>
+  <p><strong>Scrum Master (SM)</strong>: “Ok, what tasks should we create for Story X?”</p>
+
+  <p><strong>Dev</strong>: “To start with, we need to refactor Interface A, and change all users of it to use a new paradigm.”</p>
+
+  <p><strong>SM</strong>: “Does that really need to get done for Story X? It seems unrelated.”</p>
+
+  <p><strong>Dev</strong>: “It isn’t strictly necessary to implement the story, but that interface has turned out to be a leaky abstraction that has made all users of it more complicated as a result. We didn’t realize it would be such a problem when we wrote it; but now it just needs to be refactored. And since this story involves that same interface, now is the time.”</p>
+
+  <p><strong>SM</strong>: “How long with that take?”</p>
+
+  <p><strong>Dev</strong>: “Probably 20 hours, total.”</p>
+
+  <p>(they then proceed to break it down into smaller tasks)</p>
+
+</blockquote>
+
+<p>…now things could go one of a few ways. In an ideal agile scenario, where timelines are entirely flexible and there is complete trust between product owners and developers, the rest of the conversation is:</p>
+
+<blockquote>
+  <p><strong>SM</strong>: Ok. </p>
+</blockquote>
+
+<p>But most scenarios aren’t ideal. And many (most?) timelines aren’t really entirely flexible, nor relationships as entirely trusting. So the rest of the conversation might be:</p>
+
+<blockquote>
+  <p><strong>SM/Product Owner/someone with a stake in the timeline</strong>: “20 hours? Um… we don’t have time for that right now. We need to just do what’s necessary for Story X and refactor that interface when we have more time.”</p>
+</blockquote>
+
+<p>Unfortunately, when that happens, developers learn fairly quickly to work around it. I’ve seen several teams where unfortunately the conversation starts playing out like this instead:</p>
+
+<blockquote>
+  <p><strong>Scrum Master (SM)</strong>: “Ok, what tasks should we create for Story X?”
+<strong>Dev</strong>: “To start with, we need to refactor Interface A, and change all users of it to use a new paradigm.” 
+<strong>SM</strong>: “Does that really need to get done for Story X? It seems unrelated.” 
+<strong>Dev (lying)</strong>:  “Yes, it absolutely needs to get done for Story X.  And I estimate it will take 20 hours.” </p>
+</blockquote>
+
+<p>We call this “sneaking in technical stories”, where we get things done under the disguise of sometimes tangentially related user stories.
+It’s “sneaking in” because, in reality, these improvements — whether refactors or new technical features — are rarely <em>necessary</em> to complete the features. That’s the nature of technical debt: You can pay off the collateral, or you can keep paying interest on the debt. It is always cheaper, on any given story, to pay the interest instead of paying down the whole collateral.  Paying down the whole collateral, in some cases, can take a significant amount of time — often the cost of paying down the debt dwarfs the cost of the actual story you’re estimating. It starts sounding very artificial and “sneaky” when a story should take 2 days, but in order to pay down technical debt you estimate it at 21. </p>
+
+<p>I know that there are teams where the relationship between the developers and the product owner is good enough, and there is enough trust built up that when a developer says, “I really think we need to clean this up, but it will take an extra week,” the product owner says, “Ok, you know the timelines, I trust you to get it done.” But in the typical Scrum team, the odds are stacked against that relationship. A typical product owner is non-technical, so they see only features and timelines and find technical debt a fairly abstract concept. So given the choice between having a feature completed in 4 hours or 20 hours, with the only difference being the amount of technical debt removed from the codebase, the product owner, seeing a very real schedule constraint, will pick the 4 hour option, 9 times out of 10. Often they’ll try to strike a very rational bargain: “Let’s do the 4 hour option now, and we’ll try to get to the 21 hour option if we have extra time at the end of the release.” Then a separate technical story is created (“clean up interface A”) and it falls into the backlog, never to rise to the top. Knowing that this is going to happen, devs learn to lie and say it’s “absolutely necessary” in order to get it into the sprint. Or worse, they might just pad estimates with the debt in mind, and not add a task for it at all.</p>
+
+<p>You could argue that saying “yes, this is absolutely required to complete Story X” isn’t that bad. The development team is responsible for the quality of the code, so if they feel it improves the quality of the code, it’s required. And perhaps it is a lesser evil, but I think it is problematic. One particularly nasty side-effect that I’ve seen is that, since developers feel like they’re doing the work “under the radar”, they end up doing it as quickly as possible — perhaps including shortcuts, or “I’ll have to deal with this part of the problem later”. They tend to want to understate the time they’re putting into it in standups. They might not document the new interface fully, or advertise it broadly, since it is being done undercover. It leads to sloppy work.</p>
+
+<p>None of this is to villify product owners: the product owner doesn’t know the difference between a “nice to have” and “must have”, and devs can’t quantify the cost of paying the interest on techical debt vs. paying down the debt itself. So in my experience product owners will often entertain a few of these instances early in a release cycle, but then once a couple stories get ballooned up from 4 hours to 20 hours because of technical work, they loose their appetite. And to their credit, developers can <em>always</em> find more things that need to be refactored and cleaned up. So midway through every release cycle, the mandate comes down: “We just need to get the features done, we are on a tight timeline, no more technical stories.” No matter how closely I’ve worked with product owners, or how good their relationship with development is, it seems to end up in a similar place.</p>
+
+<p>Larger refactors are even worse. There’s a class of technical work that is too large to conceivably fit within a functional story. Perhaps you foresee performance issues and you need to change your persistence strategy. That’s going to take R&amp;D, and a fair amount of rework, and you’d like to do that before it’s a critical burning issue.  </p>
+
+<p>Or perhaps you’ve put off doing those medium-sized refactorings for long enough that you’ve got a pile of leaky abstractions or similar-but-not-quite-identical patterns that need to be unified, and it’s no longer a convenient sprint-sized task.</p>
+
+<p>Now it has to be called out explicitly, and that relationship between the dev team and the product owners is tested further. I’ve seen very few nontechnical product owners who will prioritize this type of work into a sprint.</p>
+
+<p>Then there’s non-functional features. These are standalone features, like a console for maintenance, which are not refactoring or technical debt, but are features with benefits to development or operations — someone other than the canonical business user that the product owner represents. Perhaps the tools will speed debugging, or make operations easier, or whatever, but they’re not specifically called out in a client SOW.</p>
+
+<p>This has the same problem: with one team, and a nontechnical product owner, it’s hard to figure out how to put these into sprints. Because at the end of the day, “business value” is usually defined as “value delivered to clients,” where  “clients” is always defined as “the set of business users that the product owner is most familiar with”. So you stack your releases with as many high-value user stories as you can — always a subset of what the client wants. </p>
+
+<p>And again, I don’t say that to vilify product owners at all. It puts them in a tough spot.
+Imagine you’re a product owner:
+You have a story in front of you for a proof of concept for restructuring the data model of the app. It will take a week to prove the concept, and after that an indeterminate amount of time to implement for real, but it may give you a significant benefit in speed of development or speed of onboarding or performance some time later.  You also have 20 client-facing features that you’d like to get into this next release. A product owner will rarely, in good conscience, put that technical story over the user stories that need to get into this release.  If you’re in the unenviable task of fitting an agile process into a SOW-driven sales process, then even less so. So that proof-of-concept story will never get into a sprint. They’re not strictly necessary for a release, clients X and Y need features A through G in this release, so we’ll get to those “in the next release.” </p>
+
+<p>There’s just no way for a product owner to prioritize possible future benefit over certain immediate benefit, even if the possible future benefit is significantly higher.  All the cards are stacked against the technical stories: they have no deadline, they are not in an SOW, and they are intangible and uncertain. It’s not product owners’ fault — that’s just the way the system is structured. If they don’t get features A…G into a release, the client is unhappy and it’s their fault. But if they don’t get technical stories Q..Z into the sprint…well, we’ve lost a possible future benefit, but perhaps we can get to it in the next release. Since technical stories don’t have a deadline, we can always push them into the next release. Features, on the other hand, often have a deadline — in practice, there’s often agreements with clients, or roadmaps (however rough) posted in advance, or some other way to let users and potential users know what is coming. Given those two choices, I know which one I would pick, too. ALL the pressure is on getting the features done by the release date, for THIS release…not making future releases faster or easier.  </p>
+
+<p>Of course we’d hope that, somehow, the possible value of a technical story would outweigh the certain value of a feature story, eventually, if the possible value of the technical story was high enough. But I don’t think the system is set up to make that happen. I’ve seen high-value technical stories that have remained in various backlogs for years on end. </p>
+
+<p>So while I understand that in an ideal world, you either express the value of large refactors or technical features and let the product owners prioritize them, or else let the technical team decide that it’s time to take a couple sprints off to tackle a large refactor while the product owner looks on obligingly. But that seems to be the exception rather than the rule.</p>
+
+<p>There are alternatives, though. Some companies use 20% time as an alternate way of scheduling in this kind of work. Some use a flat ratio of technical to functional work. Some use a dedicated team that handles “framework” or “tools”-related work to remove at least that portion of the technical backlog. </p>
+
+<p>If you’re in a situation where you hear things like, “in the next release, we’ll bite off a more reasonable timeline and prioritize these things in,” look a little closer: you might have this kind of systemic problem where technical work really can’t get prioritized in. Perhaps it’s time to look for other options. </p>
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>I’m using the term “technical” here to contrast it with “functional,” meaning something that the user will explicitly ask for.<a href="#fnref:1" rel="reference">&#8617;</a></p>
+    </li>
+    <li id="fn:2">
+      <p>Perhaps this doesn’t happen on all projects. It could be that there are projects out there where these refactors are always be caught early enough that they’re still fairly small, and so are always fixed as part of run-of-the-mill ongoing refactoring. I’m not sure if that’s true or not, but I am sure that if you ever walk into an app that is large enough (say, a hundred thousand lines of code and up), there will be cases like this that need to be fixed. I suspect that as an application reaches a size where a single developer is no longer intimately familiar with the entire thing, you’re going to have duplication, repetition, and leaky abstractions. I’d love to think that the next app that I grow from the ground up will be diligently refactored intelligently enoguh and often enough that there will be no latent patterns that need extracting or larger refactorings or reorganizations that need to be done… but at the same time I won’t put money on it.<a href="#fnref:2" rel="reference">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+]]></content>
+  </entry>
+  
   <entry>
     <title type="html"><![CDATA[On to Octopress]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2012/10/08/octopress/"/>
     <updated>2012-10-08T03:59:00-04:00</updated>
     <id>http://www.matt-thinks-so.com/blog/2012/10/08/octopress</id>
-    <content type="html"><![CDATA[<p>I’ve just switched the blog over to <a href="octopress.org">Octopress</a>.  I’ve been using vanilla <a href="https://github.com/mojombo/jekyll">Jekyll</a> for a while to keep up this blog, and I put a bit of effort into configuring it, building up a set of <a href="http://twitter.github.com/bootstrap/">Bootstrap</a>-based templates and so on. So, why switch? </p>
+    <content type="html"><![CDATA[<p>I’ve just switched the blog over to <a href="http://octopress.org">Octopress</a>.  I’ve been using vanilla <a href="https://github.com/mojombo/jekyll">Jekyll</a> for a while to keep up this blog, and I put a bit of effort into configuring it, building up a set of <a href="http://twitter.github.com/bootstrap/">Bootstrap</a>-based templates and so on. So, why switch? </p>
 
 <p>At the end of the day, this is a utilitarian site. I’m not going to impress anyone with my design chops – I enjoy graphic design in theory, and I’d like to think that I’m not the absolute worst at it, but I do little enough HTML these days that it takes a long time to get things done, for end results that are never what I want them to be. And I’d rather put the time into writing actual content<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. Meanwhile, my site wasn’t displaying terribly well on phones, and Octopress handles mobile devices well out of the box. And it’s beautiful to boot<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>. </p>
 
@@ -35,7 +160,7 @@
 </div>
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[In Defense of Easy]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2012/10/06/complexity/"/>
@@ -82,12 +207,15 @@ Synthesizing is the process whereby you understand a group of related things as 
 
 <h2 id="definitions">definitions</h2>
 
-<p>Now that I’ve butchered psychology and complexity science, I’ll move on to butcher Rich Hickey’s talk.
-In case you haven’t watched it, here’s the rough paraphrase of the definitions that he bases his thesis around:<br />
-* “complex” means combining two or more things (“complecting”).
-* “simple” means “concerned with only one thing”.
-* “easy” means “lie near” or “close at hand”.  Relative to the speaker.
-* Conversely, “hard” means “(conceptually) distant”.</p>
+<p>Now that I’ve butchered psychology and complexity science, I’ll move on to butcher Rich Hickey’s talk. 
+In case you haven’t watched it, here’s the rough paraphrase of the definitions that he bases his thesis around:</p>
+
+<ul>
+  <li>“complex” means combining two or more things (“complecting”). </li>
+  <li>“simple” means “concerned with only one thing”. </li>
+  <li>“easy” means “lie near” or “close at hand”.  Relative to the speaker. </li>
+  <li>Conversely, “hard” means “(conceptually) distant”.</li>
+</ul>
 
 <p>I think it’s fair to say that Rich felt simplicity is the important metric, while “ease” is superficial. </p>
 
@@ -169,7 +297,7 @@ In case you haven’t watched it, here’s the rough paraphrase of the definitio
 
 <h2 id="finally-a-conclusion">finally, a conclusion</h2>
 
-<p>I think Rich Hickey’s division between “simple” and “easy” is useful and instructive…but I think that many of the things that we care about in designing simpler software that falls into what he would call “easy”, rather than “simple”. And if you have a nontrivial number of components, with interactions that will not easily fit within a developer’s working memory until they’ve done a significant amount of synthesis… don’t discount easy. It can save you from that 3AM page. </p>
+<p>I think Rich Hickey’s division between “simple” and “easy” is useful and instructive…but I think that many of the things that we care about in designing simpler software that falls into what he would call “easy”, rather than “simple”. And if you have a nontrivial number of components, with interactions that will not easily fit within a developer’s working memory until they’ve done a significant amount of synthesis… don’t discount easy. It can save you from that 3AM phone call. </p>
 
 <div class="footnotes">
   <ol>
@@ -195,7 +323,7 @@ In case you haven’t watched it, here’s the rough paraphrase of the definitio
 </div>
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[Takes too long to build your project? Try harder.]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2012/01/28/try-server/"/>
@@ -231,7 +359,7 @@ In case you haven’t watched it, here’s the rough paraphrase of the definitio
 
 <p>We use Hudson…er… Jenkins as a CI server already; it builds the proejct after each checkin. So all we needed was a way to make it build the project BEFORE a checkin – what a lot of people call a “try” server (as in, “try it before you commit it”). </p>
 
-<p>I did a bit of searching, and a lot of smart people have solved this problem already:
+<p>I did a bit of searching, and a lot of smart people have solved this problem already: 
 Etsy, for example, <a href="http://codeascraft.etsy.com/2011/10/11/did-you-try-it-before-you-committed/">uses Jenkins as a “try” server</a>. Their solution is clean and simple: just send the diff of your code against master, and Jenkins will apply the diff, compile, and build. Nice. Most other solutions seem to take similar approaches: <a href="https://wiki.mozilla.org/ReleaseEngineering/TryServer">Mozilla</a>, <a href="http://buildbot.net/buildbot/docs/0.8.4/try.html">buildbot</a> (used by the <a href="http://www.chromium.org/developers/testing/try-server-usage">Chromium project</a>, among others)… and so on. </p>
 
 <p>Unfortunately, we have a lot of modules and a lot of branches. The branches are unavoidable – we support a number of clients. The number of modules…well, that my fault. I split the software into a lot of modules several years ago to try to encourage code reuse between projects, but the cost has been much higher than the benefit. Unfortunately, it’s now costly to merge things back together – but that’s another post for another time.</p>
@@ -315,46 +443,46 @@ Etsy, for example, <a href="http://codeascraft.etsy.com/2011/10/11/did-you-try-i
 <p>The try.sh script looks like this, currently. It could be a lot prettier, but this was the relatively quick-n’-dirty experiment: </p>
 
 <pre class="brush: bash">
-    #!/bin/sh
-
+    #!/bin/sh 
+    
     ###############################################################################
     # try.sh
-    #
-    # The idea behind this script is to build and package up your project locally,
+    # 
+    # The idea behind this script is to build and package up your project locally, 
     # then send the code (the classes and the test classes) to the Jenkins server
-    # to be executed there.
+    # to be executed there. 
     # This relies on the build being configured to generate a "test-jar" artifact
-    # It has some limitations:
+    # It has some limitations: 
     #   * You're not going to have exactly the same classpath (yet)
     #   * It can't handle multi-module projects (yet)
     #   * You can't add Maven profiles to the build (yet)
     ###############################################################################
-
+    
     set -u   # fail on unitialized variable
     set -e   # fail if any command exits with a non-zero status
-
+    
     # Find our local directory, so we can locate the wait-and-notify.sh script later
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &amp;&amp; pwd )"
-
+    
     JENKINS_HOST=your_build_server_here
     JENKINS_HTTP_PORT=7700
     # This is set in Jenkins' configuration; you probably have to configure Jenkins to have a static port. By default it changes every restart.
     JENKINS_SSH_PORT=54512
-
+    
     # clear out old builds, so we don't upload the wrong thing
     rm -f target/try-$USER-*
-
-    mvn -Pdeva -DskipTests=true $@ package
-
+    
+    mvn -Pdeva -DskipTests=true $@ package  
+    
     _date=`date -u +%F.%H%M%S%s`
     _filename=try-$USER-try-$_date.tar.gz
     _filepath=target/$_filename
-
-    # This would be the simple version:
-    # tar czvf $_filepath pom.xml target/*.jar
-    # ...but that only handles single-module projects.  This handles multi-module projects:
+    
+    # This would be the simple version: 
+    # tar czvf $_filepath pom.xml target/*.jar  
+    # ...but that only handles single-module projects.  This handles multi-module projects: 
     find . -name "pom.xml" -or -name "*.jar" | xargs tar -czvf $_filepath
-
+    
     echo "created try package at $_filepath"
     echo "now uploading to Jenkins..."
 
@@ -365,51 +493,51 @@ Etsy, for example, <a href="http://codeascraft.etsy.com/2011/10/11/did-you-try-i
 <p>The “wait-and-notify.sh” script just looks like this: </p>
 
 <pre class="brush: bash">
-    #!/bin/sh
+    #!/bin/sh 
 
-    set -e
-    set -u
-
+    set -e 
+    set -u 
+    
     HOST=$1
     SSH_PORT=$2
     HTTP_PORT=$3
     FILENAME=$4
     FILEPATH=$5
     USERNAME=$6
-
+    
     scp $FILEPATH  $HOST:/tmp/$FILENAME
-    ssh $HOST -p $SSH_PORT build try-build -p filename=/tmp/$FILENAME -p username=$USERNAME -s
+    ssh $HOST -p $SSH_PORT build try-build -p filename=/tmp/$FILENAME -p username=$USERNAME -s  
     # This is also an option, but jenkins-cli doesn't handle an encrypted private key, and who leaves their private key unencrypted?
-    #java -jar jenkins-cli.jar -i ~/.ssh/id_dsa -s $1/job/try-build  build try-build -p attempt.tar.gz=$2 -p username=$3 -s
-    # This would be an alternative to using private keys for jenkins-cli.jar, but you'd need to enter a username and password
+    #java -jar jenkins-cli.jar -i ~/.ssh/id_dsa -s $1/job/try-build  build try-build -p attempt.tar.gz=$2 -p username=$3 -s  
+    # This would be an alternative to using private keys for jenkins-cli.jar, but you'd need to enter a username and password 
     # --username `git config user.name` --password (something entered at the command line)
-
+    
     echo "Job has been started on Jenkins. See http://$HOST:$HTTP_PORT/job/try-build for status."
-
+    
     # Did the build succeed?
-    if [ $? -eq 0 ]
+    if [ $? -eq 0 ] 
     then
       growlnotify "Try completed successfully"
-    else
+    else  
       growlnotify "Try failed!"
     fi
 </pre>
 
-<p>The Jenkins job is a basic build with two parameters, one called “username” and one called “filename”.
+<p>The Jenkins job is a basic build with two parameters, one called “username” and one called “filename”. 
 The build runs this script as its first step: </p>
 
 <pre class="brush: bash">
     echo "Building try number ${BUILD_NUMBER} for user ${username}"
-
-    # This shouldn't be necessary -- Jenkins should keep each build separate -- but it seems that it wasn't the case. So we'll keep each build in a subdirectory by build number, which is easy enough.
-    _dirname=${BUILD_NUMBER}
+    
+    # This shouldn't be necessary -- Jenkins should keep each build separate -- but it seems that it wasn't the case. So we'll keep each build in a subdirectory by build number, which is easy enough. 
+    _dirname=${BUILD_NUMBER} 
     mkdir $_dirname
     tar  xzvf ${filename} -C ${_dirname}
     cd ${_dirname}
-
+    
     # unzip each of our -tests.jar files into a test-classes directory
     find . -name "*-tests.jar" -execdir unzip -o {} -d test-classes \;
-
+    
     # unzip the normal jar files into a classes directory
     find . -name "*SNAPSHOT.jar" -execdir unzip -o {} -d classes \;
 </pre>
@@ -421,34 +549,34 @@ The build runs this script as its first step: </p>
 <p>Try it out, let me know what you think. Or, if you have a better idea of how to get around long database-bound tests, I’m all ears.</p>
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[Greasemonkey is Underrated]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2012/01/24/greasemonkey/"/>
     <updated>2012-01-24T00:00:00-05:00</updated>
     <id>http://www.matt-thinks-so.com/blog/2012/01/24/greasemonkey</id>
-    <content type="html"><![CDATA[<p>I’ve heard about Greasemonkey a few times over the past few years.  I remember reading a few people wax eloquent about it, mainly how great it is for changing the layout of web pages (like a more convenient <a href="http://userscripts.org/scripts/show/101753">Youtube page</a>, or even changing <a href="http://userscripts.org/scripts/show/80853">Google News back to its old layout</a>).
-And I remember the <a href="http://ejohn.org/blog/greasemonkey-security/">big security kerflaffle</a> a number of years ago (wow, 2005 – has it been that long?).
+    <content type="html"><![CDATA[<p>I’ve heard about Greasemonkey a few times over the past few years.  I remember reading a few people wax eloquent about it, mainly how great it is for changing the layout of web pages (like a more convenient <a href="http://userscripts.org/scripts/show/101753">Youtube page</a>, or even changing <a href="http://userscripts.org/scripts/show/80853">Google News back to its old layout</a>). 
+And I remember the <a href="http://ejohn.org/blog/greasemonkey-security/">big security kerflaffle</a> a number of years ago (wow, 2005 – has it been that long?). 
 But I’d never had occasion to use it. </p>
 
 <p>But when I started browsing real estate listings in earnest, I got my excuse. I like <a href="www.zillow.com">Zillow</a> and <a href="www.trulia.com">Trulia</a>, but the realtor I am working with has a website of his own that he prefers – clients can save listings as “favorites” and “possibilities”, make notes, and he can make notes or suggestions in return…which makes good sense. But the site is no Zillow or Trulia: it displays far less data, it’s a bit slow, and it’s fixed at 10 results per page. And when there’s over 100 listing my price range to sort through, every little bit helps. </p>
 
-<p>Greasemonkey can’t help the site speed, but I’ve made some inroads on how much data it displays.
+<p>Greasemonkey can’t help the site speed, but I’ve made some inroads on how much data it displays. 
 I hacked up a little Greaseonkey script that runs in Firefox everytime I load the realtor’s search page. The script just goes through each listing and fires off a query to the Zillow API, returning Zillow’s value estimate, the historical min and max value of the house, and a direct link to the listing’s page on Zillow. I may add a couple other things, like tax value and last sold date (is it a flip?). I was excited about adding some neighborhood statistics, too, but unfortunately Zillow doesn’t have neighborhood data for my area.   </p>
 
-<p>Up next: look into the Trulia’s API (I haven’t checked if they have neighborhood information) and maybe Walkscore, Panoramio and Flickr (for neighborhood pictures).
+<p>Up next: look into the Trulia’s API (I haven’t checked if they have neighborhood information) and maybe Walkscore, Panoramio and Flickr (for neighborhood pictures). 
 After that, some Google Map hacks…but that’s a bit more involved.</p>
 
 <p>If anyone else is considering pimping their webpages – I highly recommend it – I recommend Mark Pilgrim’s <a href="http://commons.oreilly.com/wiki/index.php/Greasemonkey_Hacks/Getting_Started">Greasemonkey Hacks</a>. I heard some disparaging comments about the docs for Greasemonkey, but that page is great. Several of the other docs on <a href="&quot;http://wiki.greasespot.net/Main_Page}">Greasespot’s wiki</a> are worth reading as well. Those of us that are only passable Javascript programmers can be confused by Greasemonkey’s weird sandbox environment, so the documentation is necessary (objects in Greasemonkey are all wrapped with XPCNativeWrappers for security, in response to the security issues from 2005…). I don’t know if it’s mentioned in the documentation, but the newest Greasemonkey version has a “create a new script” menu action that makes getting started dead easy. </p>
 
-<p>As an aside, I have to say that after taking the Stanford’s online <a href="ml-class.org">Machine Learning class</a> this past
+<p>As an aside, I have to say that after taking the Stanford’s online <a href="ml-class.org">Machine Learning class</a> this past 
 fall, I was excited about doing some data science to help in the real estate search (“how does the addition of light rail affect nearby housing prices?”). Predicting home prices was actually one of the driving examples through the class. But I’ve been disappointed in how difficult it is to be to get access to large sets of real estate data in the US.  I guess I naïvely thought that since tax valuations and home sales are public record, there’d be a way to access a sizeable dataset. If it’s out there, I haven’t found it. And the listings themselves are almost all closed, living inside each area’s version of the MLS. The closest thing I’ve found are the API’s offered by Zillow and Trulia, but at least Zillow’s terms of service prevent you from storing their service responses locally, and they don’t return MLS results (i.e. most results added by real estate agents) in their search results via the API…you have to ask for the properties individually. </p>
 
 <p>So I’ll have to play around with big data in other ways… </p>
 
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[Cluster Management and Task Distribution, part 3]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2011/11/05/cluster-management-and-task-distribution-part-3/"/>
@@ -458,20 +586,20 @@ fall, I was excited about doing some data science to help in the real estate sea
 
 This is a followup to my <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">Zookeeper vs. Jgroups </a>post, and the <a href="http://www.matt-thinks-so.com/2011/05/15/cluster-management-and-task-distribution-part-2.html">Hazelcast addendum</a>.
 
-<p>I ended up needed caching before I needed cluster management, so after evaluating a few options I implemented a caching facade that could switch between Hazelcast and Infinispan (which is based on Jgroups).  I&#8217;ve been really impressed with Hazelcast so far – no major problems. We did hit a bug with 1.9.2, but found that a patch release with a fix was already out.
+<p>I ended up needed caching before I needed cluster management, so after evaluating a few options I implemented a caching facade that could switch between Hazelcast and Infinispan (which is based on Jgroups).  I&#8217;ve been really impressed with Hazelcast so far – no major problems. We did hit a bug with 1.9.2, but found that a patch release with a fix was already out. 
 
-<p>It also has a convenient cluster service built in, so for our cluster management needs, it&#8217;s likely to win for us, provided we don&#8217;t run across any more problems in testing. The interfaces are easy and intuitive, and I don&#8217;t really have anything to complain about – except that there aren&#8217;t many heavy hitters that are openly using it.
+<p>It also has a convenient cluster service built in, so for our cluster management needs, it&#8217;s likely to win for us, provided we don&#8217;t run across any more problems in testing. The interfaces are easy and intuitive, and I don&#8217;t really have anything to complain about – except that there aren&#8217;t many heavy hitters that are openly using it. 
 
 
 <h2>Conclusion</h2>
 
-<p>For our particular set of requirements, Hazelcast appears to be the winner:
+<p>For our particular set of requirements, Hazelcast appears to be the winner: 
 
 <ul>
 <li>it provides several things we need (distributed data structures, cache, cluster management)</li>
 <li>it&#8217;s easy to use</li>
 <li>it&#8217;s easy to hide behind a set of facades so that we can switch it out if necessary</li>
-<li>it&#8217;s very simple to configure for different client scenarios (it works on EC2, for example)</li>
+<li>it&#8217;s very simple to configure for different client scenarios (it works on EC2, for example)</li> 
 <li>it&#8217;s worked well in testing</li>
 </ul>
 
@@ -487,11 +615,11 @@ But if our requirements were different, I think Zookeeper would have been my cho
 There are probably also cases where JGroups is the right answer. It&#8217;s main advantage is its configurability – you can put together a nearly infinite combination of protocols stacks to suit various purposes. Check out the comments of <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">my first post</a>, for example, for sample code to handle node discovery in a non-multicast (e.g. EC2) environment. But if all you need is cluster management and some pretty typical services on top of that, there are simpler options.
 
 
-I&#8217;m going to be honest – after looking into Zookeeper closely, I&#8217;m looking for excuses to use it.  But I don&#8217;t think that will happen right away.
+I&#8217;m going to be honest – after looking into Zookeeper closely, I&#8217;m looking for excuses to use it.  But I don&#8217;t think that will happen right away. 
 
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[Cluster Management and Task Distribution part 2: Caching]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2/"/>
@@ -502,7 +630,7 @@ I&#8217;m going to be honest – after looking into Zookeeper closely, I&#8217;m
 
 <h2>The backstory</h2>
 
-<p>I’ve gotten a fair amount of hits on <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">this post</a> comparing JGroups and Zookeeper for task distribution and cluster management.
+<p>I’ve gotten a fair amount of hits on <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">this post</a> comparing JGroups and Zookeeper for task distribution and cluster management. 
 I wanted to write an update of what I’ve investigated so far… unfortunately, my free time to investigate this specific issue has gone kapoof. Getting rid of the single point of failure in task distribution has gone on the backlog again. </p>
 
 <p>However, in the meantime, I’ve done some investigation on distributed caches. This was the same app, but a different need – I needed a quick, practical way to distributed data across the cluster, so I tested Infinispan and Hazelcast. <br /></p>
@@ -513,7 +641,7 @@ I wanted to write an update of what I’ve investigated so far… unfortunately,
 
 <h2>Why not Terracotta?</h2>
 
-<p>Terracotta is often at the top of the list when talking about distributed caches, so why wasn’t it here?
+<p>Terracotta is often at the top of the list when talking about distributed caches, so why wasn’t it here? 
 Three reasons: </p>
 <ul>
   <li>This particular client has had bad experiences with Terracotta in the past, and was resistent to installing it here.</li>
@@ -542,7 +670,7 @@ cache.members=192.168.221.10, 192.168.221.11, 192.168.221.12, 192.168.221.13
 <p>I ran into a few issues. For example, in Infinispan, my clever code that parsed the address list, found if one of them applied to the current server, and set the bind address appropriately ran into some snags.  Netstat showed the following: </p>
 
 <pre>
-tcp        0      0 ::ffff:10.192.171.127:8016  :::*                        LISTEN
+tcp        0      0 ::ffff:10.192.171.127:8016  :::*                        LISTEN      
 </pre>
 
 <p>It was binding an IPv6 compatibility address. And my “separate port from address” code isn’t smart enough to handle IPv6 addresses, so this wasn’t going to work.
@@ -584,120 +712,7 @@ In my testing, it works out of the box and does what it’s supposed to.</p>
 </div>
 ]]></content>
   </entry>
-
-  <entry>
-    <title type="html"><![CDATA[Actors in Concurrency Terms]]></title>
-    <link href="http://www.matt-thinks-so.com/blog/2011/03/12/actor-concurrency/"/>
-    <updated>2011-03-12T00:00:00-05:00</updated>
-    <id>http://www.matt-thinks-so.com/blog/2011/03/12/actor-concurrency</id>
-    <content type="html"><![CDATA[<h2 id="intro">Intro</h2>
-
-<p>There’s a lot of talk on the web about actors. And if you’ve followed very much of it at all – especially the back-and-forth on blogs about pros, cons, and whether actors are great/overhyped/not as useful as XYZ, and so on then this won’t be new to you.
-But hopefully it’s interesting for the rest of us.
-This post was born partly out of my desire to test actors out for myself, and partly out of my desire to play with Akka, an actor framework for Scala and Java. </p>
-
-<p>For a lot of people the reaction to this post will be “well, of course!”  But I was curious, so I had to prove it to myself.  What I want to do here is describe actors (in this case, Scala actors, but the principle should apply to any implementation – let me know if that’s not the case) in terms that those who are used to semaphore-based concurrency will be familiar with. I’m using the phrase “semaphore-based concurrency” as shorthand for the whole paradigm of concurrency in C, Java, and so on – locks, threads, other things you’ll find described in, say, <em>Java Concurrency in Practice.</em></p>
-
-<p>Why? Well, because I’ve been reading a lot about actors, and it’s starting to sink in – when faced with a concurrency problem I’m starting to think, “would actors help in this case?” And to answer that question, I need to know exactly how actors compare and contrast with the other concurrency tools at my disposal. </p>
-
-<p>Important disclaimer: nothing here is intended as a knock on actors. It’s an observation on how they should be used.</p>
-
-<p>I’ll head off a couple of likely arguments up front:</p>
-
-<p>“You’re missing the point of actors!” I hopefully cover that pretty thoroughly below – there are a lot of advantages to actors. </p>
-
-<p>Related: “That’s not the kind of thing that actors were designed for!”  First of all, actors were originally proposed to replace all control flow, so I question the validity of the statement. But I’ve seen it said on many blog comments, or the related “use the right tool for the job” or “It’s just a tool in your toolbox” or “it’s not a silver bullet”.  Those are all well and good; in this post, I’m trying to compare and contrast actors with the my go-to tools for concurrent programming, to put some parameters on when to use actors.</p>
-
-<p>An important caveat, related to “not a situation to use actors” – this example (a cache) is not one you would pick to demonstrate actors.  It’s synchronous by nature, which is one of the primary things that actor architectures try to avoid.  Now, I assume pure actor architectures need caches, and I don’t know how to do a cache that’s purely asynchronous… but being synchronous neutralizes the primary advantage of actors, as I’ll explain later. Comparing a purely asynchronous use-case will have to be a separate post. </p>
-
-<p>That’s a really, critically important caveat to state up front.  I’m talking about uses of actors in situations that are not designed, from the ground up, as actor architectures. Spoiler alert: I’m going to conclude that using an actor as a drop-in replacement for standard semaphore-based design performs poorly. I’ll define “standard”, “design” and “poorly” down below, but this isn’t a knock on actors. It’s an observation on how they should be used.</p>
-
-<p>“You’re comparing apples and oranges!”  I hate that phrase. Pet peeve. All you’ve just said is, “You’re comparing two different things!”  Of course I am.  If they were identical, there’d be no point in comparing them. </p>
-
-<p>Everything in this post has been said before, more succinctly and intelligently.  If you’ve read a lot about actors and their pros and cons, this will be familiar territory. This post was born partly out of my desire to test it out for myself, and partly out of my desire to play with Akka, an actor framework for Scala and Java. If you look at <a href="http://codemonkeyism.com/actor-myths/">this post</a> (especially the comments), you’ll see discussions around a lot of this same territory.</p>
-
-<p>There’s a lot more to actors than I’m getting to here. Actors originally were conceived as an alternative to semaphores, among other things (they were originally conceved as a replacement for <em>all</em> control flow). And it has some advantages vs. semaphores.  However… you have to go through the same amount of work to create a scalable actor framework than you do to create a scalable semaphore-based concurrent data structure…but at least in a JVM-based language, your semaphore-based data structures are already there for you. Actor-based data structures are not.
-So really the message here is – if you’re looking at putting a single actor in place, like this, that’s not the way to go. </p>
-
-<p>a)	A lot of people say concurrency is hard.  I don’t necessarily think so, but I see the point.</p>
-
-<p>I have a couple of biases coming in:  first, I don’t think concurrency as devilishly hard as some people make it out to be.  I’ve certainly created concurrency bugs before, but I’ve caused a lot of other bugs too. I think locks are pretty easy to reason about.  My counter-bias is that I like Scala, and I like the idea of Erlang (the OTP especially) and I’m subject to the normal waves of programming trends that say that actors are cool. And this entire post started as me looking for an excuse to work with Akka, an actor library for Scala. </p>
-
-<p>b)	A lot of people say actors are easier. It’d be nice to compare the two on similar terms.</p>
-
-<p>Most introductions to actors start out with the argument that concurrency is hard, semaphore-based concurrency is particularly hard, and that actors are an easier way of reasoning about concurrency. In general, I think it’s true statement that it’s easy to get semaphore-based concurrency wrong – if you move beyond the trivial “lock the whole class” model.  If you just slap a lock at the entry to every method, and have them all lock on the same thing – so that there is only one thread executing the class at any point in time – it’s pretty easy. Inefficient? Yes. But easy, and pretty bulletproof.  Once you start getting more elegant (http://www.thinkingparallel.com/2007/07/31/10-ways-to-reduce-lock-contention-in-threaded-programs/ ) errors start creeping in.
-I want to explore the argument that actor concurrency is easier – but, similarly, move past the trivial “lock the whole world” concurrency model. But in order to compare like-for-like, we need to either compare trivial semaphore</p>
-
-<p>2)	 First, let’s establish that actors are, in semaphore-based concurrency terms, the equivalent of class-level locking, but with perks.   (or, with more suspense: Let’s see how a simple actor-based cache compares with a simple and not-so-simple cache implementations using semaphore-based concurrency)</p>
-
-<p>Let’s see how a simple actor-based cache compares with simple and not-so-simple cache implementations using semaphore-based concurrency.  In the next post, I’ll explore to improve the actor-based cache.
-Now, the cache is an interesting use case for an actor, because it’s synchronous.  Many (most?) of the advantages from an actor-based architecture rely on asynchrony. I don’t think that makes this a bad example, but it is stacked against actors. But caches are necessary. Perhaps as a followup we can attempt an example that is fully asynchronous. </p>
-
-<p>My conclusion up front, if you’re the “tl;dr” type:  actors have a lot of advantages.  They’re simple to reason about, they allow for some interesting design patterns. A caller who sends an asynchronous message to an actor returns immediately, even if the actor it is calling is terribly overloaded. The equivalent semaphore-based system using class-level locking would instead block the caller until it acquired the lock, which could be a long time depending on the level of contention. This is property of actors is referred to as “liveness”.
-There are some other potential benefits to actors. Having access to their own inboxes allows for interesting SEDA-style scaling possibilities, for example.  And being message-based makes the transition from single-process or single-machine to multi-process and multi-machine somewhat natural, where a traditional app will require a service layer of some sort. Actors impose a “message routing” step which can be a convenient place to put logic around failover, distribution, scaling, and probably other things I’m not thinking of.  Many actor frameworks allow for supervisor hierarchies, which offer a fault-tolerance mechanism, and a hot code replacement mechanism for in-place upgrades. The designers of Erlang knew what they were doing. </p>
-
-<p>But the first advantage – they’re simple to reason about in concurrency terms – comes at a cost:  they are simple to reason about because they are effectively using class-level locking. The most difficult part of getting traditional concurrency right is knowing what to lock, and locking it for only as long as you need it (and no longer). The actor pattern gets around that by effectively locking everything in the class – only one thing will be executing on that actor at a time, ever – and locking it for the entire duration of the method call. This works out in many situations because of the liveness advantage – yes, the lock is coarse, but callers don’t have to wait to acquire the lock. They just drop the message in the actor’s mailbox and continue on. So if all you’re looking for is simpler concurrency, and you don’t intend on taking advantage of the other benefits in your architecture, you are free to choose between actors and the coarsest of locks, at your preference. At the moment, you’re likely to get more sneers by using coarse-level locking, but that’s a psychological phenomenon of programming trends more than a real reflection on the merits of the pattern.</p>
-
-<p>On a similar note, but more of a no-brainer:  if:  1.) all you’re looking for is simpler concurrency, and 2.) you’re not going to take advantage of the other benefits in your architecture, and 3.) there is a ready-made concurrent data structure available to you, that concurrent data structure will beat an actor every time. </p>
-
-<p>That raises a question that probably merits another post: if you’re considering using actors to replace a concurrent data structure, are you thinking about them all wrong?  On the one hand, it seems quite consistent with most descriptions of actors I see: they’re to be used to hide mutable state.  A map (that’s used as a cache, for example) might be mutable, so to handle concurrent access to it, you place it inside an actor. This is exactly the use case that’s described by <something>, <something else="">, and <something else="">. And in this particular example, if the additional benefits of actors (supervisor hierarchies, mailbox introspection, possibly distributed routing …) aren’t immediately useful, then it’s hard to argue for an actor-based approach rather than, say, a ConcurrentHashMap. ConcurrentHashMap is a beautiful data structure – the lock-striping logic is far more sophisticated than anything you’re likely to write, and it’s already written and ready to use. So, all else being equal: use it. </something></something></something></p>
-
-<p>This leads to an interesting psychological phenomenon caused by the cachet of various technologies:
-The problem is, using this kind of coarse-grained locking feels dirty.  Looking at this, you just KNOW that it could be much better. So it’s very hard to leave it like this. And for good reason: with minimal effort, it could perform significantly better under heavy concurrency.
-But if you implemented the same thing with actors, it’d seem somewhat elegant. Actors are cool. Even though, from a concurrency standpoint, they are equivalent.</p>
-
-<h2 id="our-cache-example">Our Cache Example</h2>
-
-<p>Here’s some steps you might go through when designing a cache. </p>
-
-<p>First, you’d set out your interface. In this case we’ll pick a very simple interface – you can get a value, set a value, remove a value, and get a list of all keys. We’re using the last one mainly for logging in our test class. </p>
-
-<p>The first example you might write looks like this: </p>
-
-<p>This is what I’ll call “class-level locking” or “lock the world” – essentially, the class has one lock, and any method call of consequence has to acquire that lock. </p>
-
-<p>That’s really not bad. But if you’d spent some time looking at java.util.concurrent, you might see some other options that were slightly more sophisticated. Perhaps you’d notice that half of your methods were doing writes, and half were just doing reads – and reads don’t really need to block other reads. So you replace the lock with a ReadWriteLock. </p>
-
-<p>Or perhaps you realize that you can just synchronize access to the data structure itself: </p>
-
-<p>And finally, you might replace this synchronized HashMap (which is, itself, rather coarse in its Java implementation) with a ConcurrentHashMap.  This is a really sophisticated concurrent data structure, which divides the map into a series of stripes which each have their own lock, so a “put” or “get” only locks a portion of the map at a time.  That implementation might look like this: </p>
-
-<p>Future:  Infinispan (claims to have a “mostly lock-free core”, which leads me to believe it uses spin-locking. But I know that in distributed operation it uses striped locks by default, and can be configured for per-key locks.
-I’d like to plug in some other caches like Hazelcast, as well.</p>
-
-<p>b)	Now, here’s how they perform under load.
-The test class is here, if you’re curious.  Basically, it’s going to run one test thread per CPU on the test machine, run the SimpleLockCache once first for warm-up, then run a whole mess of iterations of “get” and “put”, at a ratio of 2 to 1. </p>
-
-<p>i)	8 threads, Macbook Pro
-ii)	X threads, Amazon EC2 instance.</p>
-
-<p>c)	Now, here’s an actor implementation</p>
-
-<p>Now, here’s the simplest possible actor implementation.  This is borrowed from the Lift framework (here), and adapted for this interface.  It’s simply using an actor to guard access to a HashMap:</p>
-
-<p>d)	Here’s how it performs under load
-i)	8 threads, Macbook Pro
-ii)	X threads, Amazon EC2 instance.</p>
-
-<p>Perhaps unsurprisingly, it does a bit worse than our class-level locking example. And that’s because, of course, it <em>is</em> class-level locking.  It’s synchronizing the whole class, such that only one caller will ever be able to execute on the thread at a time.  Whereas the other semaphore-based examples allowed for multiple threads to execute concurrently in some situations, that can never happen in the actor-based example. Never. It will only ever process one message at a time. </p>
-
-<p>In semaphore-based concurrency, class-level locking is considered crude. And it is. Since the class-level locking in an actor is hidden, it doesn’t come across as crude – at least, not to those of us who don’t use actors much. Perhaps because we just haven’t been trained yet to look at this and see “Whoa, bottleneck!”</p>
-
-<p>I wonder if, when it becomes normal to look at this and say, “Well, obviously, you’ll want to spawn child actors to offer multithreaded access to this data structure, otherwise it’s a bottleneck…”  that we’ll start saying, “man, actor concurrency is hard…there must be a better way”. Perhaps all “next big thing” panaceas are just the result of us not yet seeing the complications…eventually, we get used to the good things but notice the pain points more and more…  and this is starting to sound like an old marriage, so I’ll stop.</p>
-
-<p>Now, again – this is synchronous. Ideal actor architectures are asynchronous. But that doesn’t matter here – whether the calling thread was dutifully waiting for the message to return, or whether it was going about other business, it will still take a the same amount of time to process the thread because it’s a bottleneck.  And it’s silly to think that you’re not, at some point, going to need the results from that call somehow. Bottlenecks matter just as much in actor frameworks. So you need to deal with the bottleneck. </p>
-
-<p>The one advantage that actor concurrency has (that I’m aware of) is “liveness”. That is, if this were an asynchronous system, and if the cache was very backed up (lots of attempted concurrent accesses) then a call to the backed-up actor would return immediately, no matter how many other concurrently attempted accesses there were. That’s because the call to the actor is really just placing a message in its inbox; placing that message can occur quickly and return. The semaphore-based alternative would block, since the actual execution was happening in the caller’s thread. The actor would implicitly be executed in a different thread, so you gain that advantage.  And in a highly-contested, asynchronous system, that could be significant. In a synchronous environment (which a cache will always be), there’s no difference – the caller has to wait for the result, so the liveness advantage is lost. </p>
-
-<p>h.     The way you deal with bottlenecks, though, is different in an actor-based system.
-3.)  So, basic actor concurrency looks like class-level lcoking in a semaphore-based system, but with benefits. To reiterate: it has some advantages:
-a.     Advantages….
-4.)  Next: I’ll stumble through some attempts to improve the cache, based on the same principles that worked so well in the semaphore-based version.
-a.     If anyone has an already-written one out there, let me know, I’ve looked and haven’t found one.</p>
-
-]]></content>
-  </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[Cluster Management and Task Distribution: Zookeeper vs. JGroups]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/"/>
@@ -728,7 +743,7 @@ So the single point of failure needs to go.  I’m looking at some of the optio
 There is not necessarily a requirement to persist all tasks to disk, in order to keep them safe between server restarts.  In our previous version, tasks were kept in a JMS queue, and we ended up turning disk persistence off &#8211; in practice, in the case of a failure that requires manual intervention (for example, a JMS broker failure, or the failure of all nodes that had tasks in memory) almost always means that we want to manually restart jobs after the system comes back up &#8211; possibly different jobs, possibly a reduced set of tasks to make up time.  We found that we rarely want to start back up exactly where we left off.
 So, if the solution automatically persists to disk, I’ll probably create a way to bypass that if necessary (a command-line flag that lets us clear the current tasks on startup, perhaps).
 <h2>Zookeeper</h2>
-<table class="zebra-striped"><col width="*"></col> <col width="*"></col>
+<table class="zebra-striped"><col width="*"></col> <col width="*"></col> 
 <tbody>
 <tr>
 <td>Consistency</td>
@@ -767,7 +782,7 @@ Zookeeper is designed for cluster coordination, and it’s well-thought-out.  I
 </table>
 Zookeeper doesn’t list AIX as a supported environment, which is interesting.  We do have to support AIX (unfortunately).
 <h2>JGroups</h2>
-<table class="zebra-striped"><col width="*"></col> <col width="*"></col>
+<table class="zebra-striped"><col width="*"></col> <col width="*"></col> 
 <tbody>
 <tr>
 <td>Consistency</td>
@@ -805,10 +820,10 @@ With guaranteed message delivery, we could have consistent in-memory views of th
 </tbody>
 </table>
 <h2>Conclusion</h2>
-I have a followup post about Hazelcast <a href="http://www.matt-thinks-so.com/2011/05/15/cluster-management-and-task-distribution-part-2.html">here</a>, and a brief conclusion <a href="http://www.matt-thinks-so.com/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>.
+I have a followup post about Hazelcast <a href="http://www.matt-thinks-so.com/2011/05/15/cluster-management-and-task-distribution-part-2.html">here</a>, and a brief conclusion <a href="http://www.matt-thinks-so.com/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>. 
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[On Configuration]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2010/12/10/on-configuration/"/>
@@ -874,21 +889,21 @@ Of course, the project is all but dead &#8211; last updated 2008 &#8211; but how
 I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distributed configuration?
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[Oh, Oracle]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2010/03/05/oh-oracle/"/>
     <updated>2010-03-05T00:00:00-05:00</updated>
     <id>http://www.matt-thinks-so.com/blog/2010/03/05/oh-oracle</id>
-    <content type="html"><![CDATA[<p>So, I was responsible for a pretty unfortunate bug today — no way around it, I messed up.  It was classic — there was a &#8220;TODO&#8221; block where I meant to come back and finish some code, and no doubt got distracted by some very valid crisis. </p>
+    <content type="html"><![CDATA[<p>So, I was responsible for a pretty unfortunate bug today — no way around it, I messed up.  It was classic — there was a &#8220;TODO&#8221; block where I meant to come back and finish some code, and no doubt got distracted by some very valid crisis. </p> 
 <p>Fortunately, it was caught before it affected production data, but it was in test, and visible, and it was scary that it had gotten that far.</p>
 <p>But I couldn&#8217;t help but be bitter about how that block of code came to be in the first place:  the code that contained the bug was part of an elaborate scheme designed to work around joining to a particularly large table in certain circumstances.</p>
-<p>Now, it’s big data (well, at least tens of millions of rows) …we have to do what we can for efficiency.  But it made me slightly bitter that the more we optimize for relational databases, trying to eke more and more performance, the farther we move from a clear data model, and the less we&#8217;re using the &#8220;R&#8221; in RDBMS. We go through contortions, and in the process introduce bugs.</p>
+<p>Now, it’s big data (well, at least tens of millions of rows) …we have to do what we can for efficiency.  But it made me slightly bitter that the more we optimize for relational databases, trying to eke more and more performance, the farther we move from a clear data model, and the less we&#8217;re using the &#8220;R&#8221; in RDBMS. We go through contortions, and in the process introduce bugs.</p> 
 <p>I’m not sure who that might be a lesson for, but perhaps if anyone is dead-set on using a tried-and-true RDBMS to avoid bugs in newer systems, whether MapReduce or a “NoSQL” store, it’s worth noting that there is some tradeoff here:  bugs in the data store in question vs. bugs you introduce into your own code due to the increased complexity as you contort your data model to make it scale where you need it to go.</p>
-
+ 
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[on the cusp of Big Data]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2009/12/19/on-the-cusp-of-big-data/"/>
@@ -908,7 +923,7 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 <p><a name="2" href="#to2"><sup>2</sup></a> Turns out, I did recover some old posts from a Typo blog from 2006.  A couple of the most boring just didn&#8217;t make the move over, but most of them are here for morbid curiosity about what seemed interesting at the time.</p>
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[SSL curiosity]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2006/09/13/ssl-curiosity/"/>
@@ -925,7 +940,7 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 <p>Again, maybe this is a known bug, but hey, I thought I’d throw it out there.  Adding the test CA to IE’s “trusted root certificates” list fixed the problem.</p>
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[Another library]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2006/06/16/jamon/"/>
@@ -938,7 +953,7 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 <p>With that said, I’m going to go make some coffee now… </p>
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[Perhaps I'm missing something...]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2006/05/19/axis2/"/>
@@ -953,7 +968,7 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 <p>Granted, I’m sure someone could point out the features in some of my projects that no one really wanted. Or, perhaps, someone should point out why in fact this is a killer feature and I’ve just missed it. But it seems particularly weird to me…</p>
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[For the record...]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2006/05/16/for-the-record/"/>
@@ -970,7 +985,7 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 <p>Just thought you might be interested. </p>
 ]]></content>
   </entry>
-
+  
   <entry>
     <title type="html"><![CDATA[The Love-Hate of JiBX]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2006/05/01/the-love-hate-of-jibx/"/>
@@ -1001,5 +1016,5 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 <p>All in all, I’m coming to terms with the translation layer. But it still feels like it oughtn’t be necessary…  </p>
 ]]></content>
   </entry>
-
+  
 </feed>
