@@ -1,7 +1,8 @@
 ---
 layout: post
-title: "Refactoring and Technical Debt (or, legacy apps have all the fun)"
+title: "Refactoring and Technical Debt" 
 date: 2013-10-08 01:29
+subtitle: "or, legacy apps have all the fun"
 comments: true
 summary: "where I try to rationalize continuous refactoring and large, unweildy applications"
 categories: 
