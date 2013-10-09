@@ -4,7 +4,7 @@
   <title><![CDATA[matt thinks so]]></title>
   <link href="http://www.matt-thinks-so.com/atom.xml" rel="self"/>
   <link href="http://www.matt-thinks-so.com/"/>
-  <updated>2013-10-08T23:58:09-04:00</updated>
+  <updated>2013-10-09T01:19:06-04:00</updated>
   <id>http://www.matt-thinks-so.com/</id>
   <author>
     <name><![CDATA[Matt Hoffman]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Refactoring and Technical Debt (or, legacy apps have all the fun)]]></title>
+    <title type="html"><![CDATA[Refactoring and Technical Debt]]></title>
     <link href="http://www.matt-thinks-so.com/blog/2013/10/08/refactoring/"/>
     <updated>2013-10-08T01:29:00-04:00</updated>
     <id>http://www.matt-thinks-so.com/blog/2013/10/08/refactoring</id>
