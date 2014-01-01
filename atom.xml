@@ -4,7 +4,7 @@
   <title><![CDATA[matt thinks so]]></title>
   <link href="http://www.matt-thinks-so.com/atom.xml" rel="self"/>
   <link href="http://www.matt-thinks-so.com/"/>
-  <updated>2013-10-09T01:19:06-04:00</updated>
+  <updated>2014-01-01T03:42:01-05:00</updated>
   <id>http://www.matt-thinks-so.com/</id>
   <author>
     <name><![CDATA[Matt Hoffman]]></name>
@@ -12,6 +12,103 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Getting started with Solr and Clojure]]></title>
+    <link href="http://www.matt-thinks-so.com/blog/2013/12/31/clojure-solr-quickstart/"/>
+    <updated>2013-12-31T11:29:00-05:00</updated>
+    <id>http://www.matt-thinks-so.com/blog/2013/12/31/clojure-solr-quickstart</id>
+    <content type="html"><![CDATA[<p>I’ve been doing a lot of work with Solr recently, at work and on some personal projects. I use Clojure for most personal projects these days, and the few guides out there about using Clojure with Solr (as of this writing) were fairly out-of-date, so I thought I’d offer this one.</p>
+
+<p>The primary way of interacting with Solr in Java is via the SolrJ client library. You can use it directly in Clojure if you want – it’s a fairly simple library with a straightforward API – but there are no less than 4 libraries that wrap it in Clojurey syntax: </p>
+
+<ul>
+  <li><a href="https://github.com/mwmitchell/flux">Flux</a></li>
+  <li><a href="https://github.com/mlehman/solrclj">Solrclj</a></li>
+  <li><a href="https://github.com/mattdeboard/Icarus">Icarus</a></li>
+  <li><a href="https://github.com/mikejs/clojure-solr">Clojure-Solr</a></li>
+</ul>
+
+<p>Of these, Flux, by Matt Mitchell, is the most recently updated and the only one that bundles SolrJ 4.x. Solrclj uses version 3.6.2, so it would likely work fine with 4.x without modifications, but I haven’t tried. The other two are significantly older. </p>
+
+<p>If you’re interested in following along, I’ve put together <a href="https://github.com/matthoffman/solr-clojure-sample">a quickstart application</a> that you might find useful. The samples in this post are all in that project. I used Flux as the Clojure wrapper of choice, but it would be simple to switch that out for Solrclj or to use SolrJ directly, if you felt so inclined.</p>
+
+<h2 id="a-note-on-ides-etc">A note on IDEs, etc.</h2>
+<p>Chances are, you already have a Clojure setup that you are quite happy with. But just in case you don’t:</p>
+
+<ul>
+  <li>If you’re comfortable with Emacs, go ahead and use that. There’s a lot of information about getting started with Emacs on <a href="http://clojure-doc.org/articles/tutorials/emacs.html">clojure-doc</a>.</li>
+  <li>If you’re not fully conversant in Emacs (and there’s no shame in that), and you’re coming from the Java world, I’ve included IntelliJ project files in the quickstart project. <a href="http://www.jetbrains.com/idea/download/">IntelliJ Community Edition</a> and the <a href="http://cursiveclojure.com/eap.html">Cursive Clojure</a> plugin make for an easy way to get started. Eclipse and the Counterclockwise plugin work too, and are quite popular, but I haven’t used it in a while…if you want to contribute Eclipse project files for the quickstart, send me a pull request.</li>
+</ul>
+
+<p>If you don’t have it already, <a href="http://leiningen.org">download Leiningen</a>, the most common Clojure build tool. It has a one-line installation script. </p>
+
+<h2 id="setting-up-a-sample-solr-server">Setting up a sample Solr server</h2>
+
+<p>This sample application connects to a running Solr server. Setting up a server is simple. One simple way to do it:</p>
+
+<p>Download Solr from <a href="http://lucene.apache.org/solr/">http://lucene.apache.org/solr/</a> and unzip it.
+Go into the <code>examples/</code> directory and run:</p>
+
+<pre><code> java -jar start.jar
+</code></pre>
+
+<p>That will start a sample Solr server.  Keep that terminal open.</p>
+
+<h2 id="repl">REPL</h2>
+
+<p>Now that there’s a Solr server running, time to fire up a REPL in the solr-clojure-sample project. 
+If you’re using IntelliJ, you can do that using <code>Run -&gt; lein repl</code>, and you’ll have the REPL there inside your IDE, and you can execute things in the editor window directly in the REPL and all that goodness that Emacs users are used to. You can also choose “debug” instead of “run”, and you’ll be able to set breakpoints, which Emacs users are not used to. </p>
+
+<p>Alternately, you can just run “lein repl” from the command line. You miss out on the IDE integration goodness, but it will work fine.</p>
+
+<p>Either way you start the REPL it will automatically load <code>dev/user.clj</code> (because project.clj says to).
+This loads a set of useful namespaces as well as some helpful functions for development: init, start, stop, go, and reset.
+For more on the philosophy behind these, see <a href="http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded">Stuart Sierra’s blog post</a> or the <a href="http://thinkrelevance.com/blog/2013/05/29/stuart-sierra-episode-032">related podcast</a>. These have nothing to do with Solr specifically – they’re just a Clojure software architecture design pattern – but since the quickstart doesn’t make much sense if you don’t understand what they’re for, I’ll go into a little detail.</p>
+
+<p>In short, there’s a map called <code>blast.solr/config</code> that contains a variety of configuration properties for the app. A production app would take these config settings and use them to build a Solr connection which it would then hold on to for the life of the application. How it holds onto that connection will vary by application… for development purposes, we just have an atom in dev/user.clj called “system”. Calling <code>(go)</code> from your REPL will use the config map in <code>blast.solr/config</code> and connect to your sample Solr server, then populate the <code>system</code> atom with that connection. </p>
+
+<p>If for some reason you make changes that require resetting the connection, or changes to the configuration map, you can run:</p>
+
+<pre><code>(reset)
+</code></pre>
+
+<p>This will close any existing connection, reload the namespaces, and reconnect. </p>
+
+<h2 id="load-data">Load Data</h2>
+
+<p>Solr isn’t very interesting without any data, so let’s load some. I’ve included a text file called “sonnets.edn” which contains all of Shakespeare’s sonnets, in <a href="https://github.com/edn-format/edn">EDN</a> format. The fields are already named using some Solr conventions: *_t to denote text fields, *_i to denote ints, and so on. 
+To load the data, make sure you’ve run <code>(go)</code> in the REPL to establish a connection, and then run: </p>
+
+<pre><code> ;; We'll read a file line-by-line and load it into Solr
+ (flux/with-connection (conn)
+                    (with-open [rdr (io/reader "sonnets.edn")]
+                      (doseq [line (line-seq rdr)]
+                        (println line)
+                        (flux/add (edn/read-string line)))
+                      (flux/commit)
+                      (flux/query "*:*"))) ; query our new data
+</code></pre>
+
+<h2 id="run-some-queries">Run some queries</h2>
+
+<p>The quickstart app has a few helper functions in user.clj that might be useful. <code>q</code>, for example, runs queries:</p>
+
+<pre><code>(q "*:*")
+</code></pre>
+
+<p>There are some commented-out forms there that will load some sample data into Solr for experimentation. For example:</p>
+
+<pre><code> (q "line_t:desire")
+ (q "line_t:desire" {:deftype "edismax"}) ; send query args if you want
+ (q "line_t:desire" {:deftype :edismax})  ; flux  will convert keywords into strings, so use them at will.
+ (q "{!edismax qf=\"line_t\"}desire")     ; version with local variables. Anything that's valid in a Solr query is valid here.
+</code></pre>
+
+<p>Enjoy!</p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Refactoring and Technical Debt]]></title>
@@ -821,6 +918,72 @@ With guaranteed message delivery, we could have consistent in-memory views of th
 </table>
 <h2>Conclusion</h2>
 I have a followup post about Hazelcast <a href="http://www.matt-thinks-so.com/2011/05/15/cluster-management-and-task-distribution-part-2.html">here</a>, and a brief conclusion <a href="http://www.matt-thinks-so.com/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>. 
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[On Configuration]]></title>
+    <link href="http://www.matt-thinks-so.com/blog/2010/12/10/on-configuration.html/"/>
+    <updated>2010-12-10T00:00:00-05:00</updated>
+    <id>http://www.matt-thinks-so.com/blog/2010/12/10/on-configuration.html</id>
+    <content type="html"><![CDATA[I've been musing recently on how to scale our configuration system up and out: making it work more dynamically for single nodes, and handle multiple nodes...well, at all.
+<h2>How it works now</h2>
+Right now, our configuration is spread across the following places, roughly in order of precedence:
+<ul>
+	<li>System properties (-D properties set on the command line)</li>
+	<li>a user-editable property file, for overrides to default properties.  This is preserved during system upgrades.</li>
+	<li>a &#8220;system defaults&#8221; property file, user-visible but overwritten during upgrades.</li>
+	<li>a database table:  for a while, we were standardizing on properties in the database.  More on this later&#8230;</li>
+	<li>some property files buried inside jars, which hold some database queries, some default values, and so on.</li>
+	<li>log4j.xml</li>
+</ul>
+We use a MergedPropertyPlaceholderConfigurer, along with a couple other configuration classes available <a title="blast-config on github" href="https://github.com/matthoffman/blast-config">on github</a>) that merges properties from most of the above locations together, ranks them in order of precedence, and then sets them at startup time using Spring&#8217;s standard placeholder syntax (${property.name}). Database properties are loaded from a table using a special Spring property loader.
+
+So any property can be set in a higher-precedence location and it will override one set in a lower-precedence location.
+
+In practice, new properties tend to get set in the property file. Why? Because database changes require a patch (like a migration in the Rails world) which needs to get migrated to each applicable environment.  Deploying the code to a development or test server then requires both a code update and a database update. In practice, the dependency between the code and particular database patches is a bit of a hassle &#8211; certainly far more so than just adding it to a property file which gets deployed along with the code.  A bad motivation for keeping properties in files?  Perhaps&#8230; but it is the reality of it. A system that raises the barrier of entry for doing &#8220;the right thing&#8221; is a bad system.  Which brings us to&#8230;
+<h2>Problems with current system</h2>
+<ol>
+	<li>property files are cumbersome in a distributed environment.  Many of our deployments are single-node, but more and more they&#8217;re distributed, and distributed deployments should be our default going forward.</li>
+	<li>For properties stored in the DB, adding, removing or updating any property requires a DB task, and then a DB refresh, which has the effect of discouraging parameterizing things. You tend to think, &#8220;eh, well&#8230; I&#8217;ll just hard-code this for now&#8230;&#8221;</li>
+	<li>Properties are loaded at startup time only – you can&#8217;t change property values without changing each property file and then restarting each node.</li>
+</ol>
+<h2>Requirements for a new system:</h2>
+I&#8217;d like to borrow requirements from <a href="http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html">http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html</a>:
+<ol>
+<li>Reloading a configuration should be a simple operation for the operator to trigger.
+<li>It should not be possible to load an invalid configuration. If the operator tries to do so, the application should continue running with the old configuration.
+<li>When reloading a configuration, the application should smoothly switch from the old configuration to the new configuration, ensuring that it is always operating with a consistent configuration. More precisely, an operational sequence that requires a consistent set of configuration parameters for the entire sequence should complete its sequence with the same set of configuration parameters as were active when the sequence started. – For us, this is actually pretty easy.  Our app depends on a task distribution framework, meaning that work is defined as a series of tasks with defined beginnings and endings.  So, we merely need to load the configuration at the beginning of each discrete unit of work.
+<li>The application should provide feedback so that the operator knows what the application is doing. Logging, notification or statistics about configuration reloads should be available.
+
+<br /><br />&#8230;and I&#8217;d add:
+<li>We should be able to set configurations for all nodes at once (this could mean using the database, or perhaps a command-line tool that sprays configurations out to the various nodes, plus a web service to tell nodes to reload..or something else entirely).
+<li>We should be able to view the current configuration for each node easily.
+<li>We should be able to share configuration between our app and other related applications, again, this could be database, or a web service that exposes our properties to other applications.
+</ol>
+<h2>Current thoughts</h2>
+At the code level, I&#8217;m thinking of loading properties at the beginning of each task, using a base class or something built into the framework.
+Reloading and interrogating the configuration could be via a web service (get_configuration / set_configuration). For requirement 3, the easiest option seems to be to use Configgy as a configuration base.
+As far as centralized configuration goes, I&#8217;m up in the air. Some options:
+<ul>
+	<li>Spraying config files (scp&#8217;ing configuration files to each server, which would have to be tied to either an automatic poll of files, or a manual &#8220;reload_configuration&#8221; web service call)</li>
+	<li>distributing configuration using a web service (node 2 calls get_all_configuration on node 1, and sets its own configuration accordingly) – but it would need to be saved somewhere in case node 2 restarts when node 1 isn&#8217;t available. The database is an option, but has development-time issues as noted above.</li>
+	<li>saving all configuration in Zookeeper.</li>
+</ul>
+What i&#8217;d really like, though, is a configuration system that kept properties in an immutable data structure that kept track of where properties came from &#8211; so, I could define the locations properties should come from, and then in the application I could say,  &#8220;config.getProperty(&#8216;foo&#8217;)&#8221;  and get the value with the highest precedence (whether that&#8217;s from an override file, a database table, or whatever).  But I could also say &#8220;config.getPropertyDetails(&#8216;foo&#8217;) &#8221; and get a list that said &#8220;property &#8216;foo&#8217; is set to &#8216;bar&#8217; by local override, is set to &#8216;groo&#8217; by the central configuration server, and the &#8216;moo&#8217; as a fallback default.&#8221; Now, why do I want that? Mainly for on-site debugging:  &#8220;I set the property in this property file, but it&#8217;s not working!&#8221;    
+
+<h2>Some related (external) links:</h2>
+<ul>
+	<li><a href="http://soupinadeli.com/resilient-software-configuration/">http://soupinadeli.com/resilient-software-configuration/</a> - a good article about how a configuration system should work, and why.</li>
+	<li><a href="http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html">http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html</a> - another good article, cited above.</li>
+        <li><a href="http://stackoverflow.com/questions/1244455/where-how-to-store-distributed-configuration-data">http://stackoverflow.com/questions/1244455/where-how-to-store-distributed-configuration-data</a> - an interesting solution for all-database configuration, with a &#8220;central&#8221; table and a &#8220;local&#8221; table (for &#8220;defaults&#8221; and &#8220;overrides&#8221;, like what I&#8217;m doing currently for property files).   The answerer takes it a couple steps farther, with an interesting SQL analytics query to pull it all in at once. 
+        <li><a href="http://commons.apache.org/configuration/">Apache Commons Configuration</a> comes close to the model I described above, with their <a href="http://commons.apache.org/configuration/apidocs/org/apache/commons/configuration/CompositeConfiguration.html">Composite Configuration</a> class.  I looked at Commons Configuration a year or so ago, and thought it was interesting but not quite what I was looking for (and their Hierarchical Configuration concepts can get pretty hairy). But I&#8217;m intrigued by the CompositeConfiguration class, so I need to look into it again.  
+Of course, the project is all but dead &#8211; last updated 2008 &#8211; but how often does a configuration library really need to change?  
+        <li><a href="https://issues.apache.org/jira/browse/CONFIGURATION-395">Interesting patch</a> to Commons Configuration for Groovy interpolation (i.e. put Groovy in property values, to be evaluated at load-time)
+        <li><a href=""></a>&#8230;more to come
+</ul>
+
+I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distributed configuration?
 ]]></content>
   </entry>
   

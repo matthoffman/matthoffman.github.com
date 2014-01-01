@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
 <!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
@@ -8,7 +9,7 @@
   <meta name="author" content="Matt Hoffman">
 
   
-  <meta name="description" content="There’s a lot of great ideas under the “agile development” umbrella. It now encompasses ideas pulled from older software engineering practices, &hellip;">
+  <meta name="description" content="I’ve been doing a lot of work with Solr recently, at work and on some personal projects. I use Clojure for most personal projects these days, and the &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -87,6 +88,130 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2013/12/31/clojure-solr-quickstart/">Getting Started With Solr and Clojure</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-12-31T11:29:00-05:00" pubdate data-updated="true">Dec 31<span>st</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I’ve been doing a lot of work with Solr recently, at work and on some personal projects. I use Clojure for most personal projects these days, and the few guides out there about using Clojure with Solr (as of this writing) were fairly out-of-date, so I thought I’d offer this one.</p>
+
+<p>The primary way of interacting with Solr in Java is via the SolrJ client library. You can use it directly in Clojure if you want – it’s a fairly simple library with a straightforward API – but there are no less than 4 libraries that wrap it in Clojurey syntax: </p>
+
+<ul>
+  <li><a href="https://github.com/mwmitchell/flux">Flux</a></li>
+  <li><a href="https://github.com/mlehman/solrclj">Solrclj</a></li>
+  <li><a href="https://github.com/mattdeboard/Icarus">Icarus</a></li>
+  <li><a href="https://github.com/mikejs/clojure-solr">Clojure-Solr</a></li>
+</ul>
+
+<p>Of these, Flux, by Matt Mitchell, is the most recently updated and the only one that bundles SolrJ 4.x. Solrclj uses version 3.6.2, so it would likely work fine with 4.x without modifications, but I haven’t tried. The other two are significantly older. </p>
+
+<p>If you’re interested in following along, I’ve put together <a href="https://github.com/matthoffman/solr-clojure-sample">a quickstart application</a> that you might find useful. The samples in this post are all in that project. I used Flux as the Clojure wrapper of choice, but it would be simple to switch that out for Solrclj or to use SolrJ directly, if you felt so inclined.</p>
+
+<h2 id="a-note-on-ides-etc">A note on IDEs, etc.</h2>
+<p>Chances are, you already have a Clojure setup that you are quite happy with. But just in case you don’t:</p>
+
+<ul>
+  <li>If you’re comfortable with Emacs, go ahead and use that. There’s a lot of information about getting started with Emacs on <a href="http://clojure-doc.org/articles/tutorials/emacs.html">clojure-doc</a>.</li>
+  <li>If you’re not fully conversant in Emacs (and there’s no shame in that), and you’re coming from the Java world, I’ve included IntelliJ project files in the quickstart project. <a href="http://www.jetbrains.com/idea/download/">IntelliJ Community Edition</a> and the <a href="http://cursiveclojure.com/eap.html">Cursive Clojure</a> plugin make for an easy way to get started. Eclipse and the Counterclockwise plugin work too, and are quite popular, but I haven’t used it in a while…if you want to contribute Eclipse project files for the quickstart, send me a pull request.</li>
+</ul>
+
+<p>If you don’t have it already, <a href="http://leiningen.org">download Leiningen</a>, the most common Clojure build tool. It has a one-line installation script. </p>
+
+<h2 id="setting-up-a-sample-solr-server">Setting up a sample Solr server</h2>
+
+<p>This sample application connects to a running Solr server. Setting up a server is simple. One simple way to do it:</p>
+
+<p>Download Solr from <a href="http://lucene.apache.org/solr/">http://lucene.apache.org/solr/</a> and unzip it.
+Go into the <code>examples/</code> directory and run:</p>
+
+<pre><code> java -jar start.jar
+</code></pre>
+
+<p>That will start a sample Solr server.  Keep that terminal open.</p>
+
+<h2 id="repl">REPL</h2>
+
+<p>Now that there’s a Solr server running, time to fire up a REPL in the solr-clojure-sample project. 
+If you’re using IntelliJ, you can do that using <code>Run -&gt; lein repl</code>, and you’ll have the REPL there inside your IDE, and you can execute things in the editor window directly in the REPL and all that goodness that Emacs users are used to. You can also choose “debug” instead of “run”, and you’ll be able to set breakpoints, which Emacs users are not used to. </p>
+
+<p>Alternately, you can just run “lein repl” from the command line. You miss out on the IDE integration goodness, but it will work fine.</p>
+
+<p>Either way you start the REPL it will automatically load <code>dev/user.clj</code> (because project.clj says to).
+This loads a set of useful namespaces as well as some helpful functions for development: init, start, stop, go, and reset.
+For more on the philosophy behind these, see <a href="http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded">Stuart Sierra’s blog post</a> or the <a href="http://thinkrelevance.com/blog/2013/05/29/stuart-sierra-episode-032">related podcast</a>. These have nothing to do with Solr specifically – they’re just a Clojure software architecture design pattern – but since the quickstart doesn’t make much sense if you don’t understand what they’re for, I’ll go into a little detail.</p>
+
+<p>In short, there’s a map called <code>blast.solr/config</code> that contains a variety of configuration properties for the app. A production app would take these config settings and use them to build a Solr connection which it would then hold on to for the life of the application. How it holds onto that connection will vary by application… for development purposes, we just have an atom in dev/user.clj called “system”. Calling <code>(go)</code> from your REPL will use the config map in <code>blast.solr/config</code> and connect to your sample Solr server, then populate the <code>system</code> atom with that connection. </p>
+
+<p>If for some reason you make changes that require resetting the connection, or changes to the configuration map, you can run:</p>
+
+<pre><code>(reset)
+</code></pre>
+
+<p>This will close any existing connection, reload the namespaces, and reconnect. </p>
+
+<h2 id="load-data">Load Data</h2>
+
+<p>Solr isn’t very interesting without any data, so let’s load some. I’ve included a text file called “sonnets.edn” which contains all of Shakespeare’s sonnets, in <a href="https://github.com/edn-format/edn">EDN</a> format. The fields are already named using some Solr conventions: *_t to denote text fields, *_i to denote ints, and so on. 
+To load the data, make sure you’ve run <code>(go)</code> in the REPL to establish a connection, and then run: </p>
+
+<pre><code> ;; We'll read a file line-by-line and load it into Solr
+ (flux/with-connection (conn)
+                    (with-open [rdr (io/reader "sonnets.edn")]
+                      (doseq [line (line-seq rdr)]
+                        (println line)
+                        (flux/add (edn/read-string line)))
+                      (flux/commit)
+                      (flux/query "*:*"))) ; query our new data
+</code></pre>
+
+<h2 id="run-some-queries">Run some queries</h2>
+
+<p>The quickstart app has a few helper functions in user.clj that might be useful. <code>q</code>, for example, runs queries:</p>
+
+<pre><code>(q "*:*")
+</code></pre>
+
+<p>There are some commented-out forms there that will load some sample data into Solr for experimentation. For example:</p>
+
+<pre><code> (q "line_t:desire")
+ (q "line_t:desire" {:deftype "edismax"}) ; send query args if you want
+ (q "line_t:desire" {:deftype :edismax})  ; flux  will convert keywords into strings, so use them at will.
+ (q "{!edismax qf=\"line_t\"}desire")     ; version with local variables. Anything that's valid in a Solr query is valid here.
+</code></pre>
+
+<p>Enjoy!</p>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1120,7 +1245,7 @@ I have a followup post about Hazelcast <a href="/2011/05/15/cluster-management-a
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2010/12/10/on-configuration/">On Configuration</a></h1>
+      <h1 class="entry-title"><a href="/blog/2010/12/10/on-configuration.html/">On Configuration</a></h1>
     
     
       <p class="meta">
@@ -1208,47 +1333,6 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/03/05/oh-oracle/">Oh, Oracle</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-03-05T00:00:00-05:00" pubdate data-updated="true">Mar 5<span>th</span>, 2010</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>So, I was responsible for a pretty unfortunate bug today — no way around it, I messed up.  It was classic — there was a &#8220;TODO&#8221; block where I meant to come back and finish some code, and no doubt got distracted by some very valid crisis. </p> 
-<p>Fortunately, it was caught before it affected production data, but it was in test, and visible, and it was scary that it had gotten that far.</p>
-<p>But I couldn&#8217;t help but be bitter about how that block of code came to be in the first place:  the code that contained the bug was part of an elaborate scheme designed to work around joining to a particularly large table in certain circumstances.</p>
-<p>Now, it’s big data (well, at least tens of millions of rows) …we have to do what we can for efficiency.  But it made me slightly bitter that the more we optimize for relational databases, trying to eke more and more performance, the farther we move from a clear data model, and the less we&#8217;re using the &#8220;R&#8221; in RDBMS. We go through contortions, and in the process introduce bugs.</p> 
-<p>I’m not sure who that might be a lesson for, but perhaps if anyone is dead-set on using a tried-and-true RDBMS to avoid bugs in newer systems, whether MapReduce or a “NoSQL” store, it’s worth noting that there is some tradeoff here:  bugs in the data store in question vs. bugs you introduce into your own code due to the increased complexity as you contort your data model to make it scale where you need it to go.</p>
- 
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1264,6 +1348,10 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/31/clojure-solr-quickstart/">Getting Started With Solr and Clojure</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/10/08/refactoring/">Refactoring and Technical Debt</a>
       </li>
     
@@ -1277,10 +1365,6 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
     
       <li class="post">
         <a href="/blog/2012/01/28/try-server/">Takes Too Long to Build Your Project? Try Harder.</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/01/24/greasemonkey/">Greasemonkey Is Underrated</a>
       </li>
     
   </ul>
@@ -1336,7 +1420,7 @@ I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distribu
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Matt Hoffman -
+  Copyright &copy; 2014 - Matt Hoffman -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 

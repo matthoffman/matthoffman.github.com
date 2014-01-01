@@ -1,0 +1,346 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>On Configuration - matt thinks so</title>
+  <meta name="author" content="Matt Hoffman">
+
+  
+  <meta name="description" content="I've been musing recently on how to scale our configuration system up and out: making it work more dynamically for single nodes, and handle multiple &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://www.matt-thinks-so.com/blog/2010/12/10/on-configuration.html">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="matt thinks so" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!-- bring in the Droid Sans font from Google --> 
+<link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold' rel='stylesheet' type='text/css'>
+<!-- a couple others that Octopress uses by default --> 
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-21082916-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner">    <div id="title" class="title">
+      <div id="titletext" class="titletext">
+        <h1>
+          <a href="/">
+            <img src="/images/lightbulb_dim_small.png" border="0" height="80" width="80"/>
+            <span id="namefirst">matt</span>
+            <span id="namemiddle">thinks</span>
+            <span id="namelast">so</span><span id="namepre">&hellip;</span>
+           </a>
+        </h1>
+      </div>
+    </div>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:www.matt-thinks-so.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">On Configuration</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content">I've been musing recently on how to scale our configuration system up and out: making it work more dynamically for single nodes, and handle multiple nodes...well, at all.
+<h2>How it works now</h2>
+Right now, our configuration is spread across the following places, roughly in order of precedence:
+<ul>
+	<li>System properties (-D properties set on the command line)</li>
+	<li>a user-editable property file, for overrides to default properties.  This is preserved during system upgrades.</li>
+	<li>a "system defaults" property file, user-visible but overwritten during upgrades.</li>
+	<li>a database table:  for a while, we were standardizing on properties in the database.  More on this later...</li>
+	<li>some property files buried inside jars, which hold some database queries, some default values, and so on.</li>
+	<li>log4j.xml</li>
+</ul>
+We use a MergedPropertyPlaceholderConfigurer, along with a couple other configuration classes available <a title="blast-config on github" href="https://github.com/matthoffman/blast-config">on github</a>) that merges properties from most of the above locations together, ranks them in order of precedence, and then sets them at startup time using Spring's standard placeholder syntax (${property.name}). Database properties are loaded from a table using a special Spring property loader.
+
+So any property can be set in a higher-precedence location and it will override one set in a lower-precedence location.
+
+In practice, new properties tend to get set in the property file. Why? Because database changes require a patch (like a migration in the Rails world) which needs to get migrated to each applicable environment.  Deploying the code to a development or test server then requires both a code update and a database update. In practice, the dependency between the code and particular database patches is a bit of a hassle -- certainly far more so than just adding it to a property file which gets deployed along with the code.  A bad motivation for keeping properties in files?  Perhaps... but it is the reality of it. A system that raises the barrier of entry for doing "the right thing" is a bad system.  Which brings us to...
+<h2>Problems with current system</h2>
+<ol>
+	<li>property files are cumbersome in a distributed environment.  Many of our deployments are single-node, but more and more they're distributed, and distributed deployments should be our default going forward.</li>
+	<li>For properties stored in the DB, adding, removing or updating any property requires a DB task, and then a DB refresh, which has the effect of discouraging parameterizing things. You tend to think, "eh, well... I'll just hard-code this for now..."</li>
+	<li>Properties are loaded at startup time only – you can't change property values without changing each property file and then restarting each node.</li>
+</ol>
+<h2>Requirements for a new system:</h2>
+I'd like to borrow requirements from <a href="http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html">http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html</a>:
+<ol>
+<li>Reloading a configuration should be a simple operation for the operator to trigger.
+<li>It should not be possible to load an invalid configuration. If the operator tries to do so, the application should continue running with the old configuration.
+<li>When reloading a configuration, the application should smoothly switch from the old configuration to the new configuration, ensuring that it is always operating with a consistent configuration. More precisely, an operational sequence that requires a consistent set of configuration parameters for the entire sequence should complete its sequence with the same set of configuration parameters as were active when the sequence started. – For us, this is actually pretty easy.  Our app depends on a task distribution framework, meaning that work is defined as a series of tasks with defined beginnings and endings.  So, we merely need to load the configuration at the beginning of each discrete unit of work.
+<li>The application should provide feedback so that the operator knows what the application is doing. Logging, notification or statistics about configuration reloads should be available.
+
+<br /><br />...and I'd add:
+<li>We should be able to set configurations for all nodes at once (this could mean using the database, or perhaps a command-line tool that sprays configurations out to the various nodes, plus a web service to tell nodes to reload..or something else entirely).
+<li>We should be able to view the current configuration for each node easily.
+<li>We should be able to share configuration between our app and other related applications, again, this could be database, or a web service that exposes our properties to other applications.
+</ol>
+<h2>Current thoughts</h2>
+At the code level, I'm thinking of loading properties at the beginning of each task, using a base class or something built into the framework.
+Reloading and interrogating the configuration could be via a web service (get_configuration / set_configuration). For requirement 3, the easiest option seems to be to use Configgy as a configuration base.
+As far as centralized configuration goes, I'm up in the air. Some options:
+<ul>
+	<li>Spraying config files (scp'ing configuration files to each server, which would have to be tied to either an automatic poll of files, or a manual "reload_configuration" web service call)</li>
+	<li>distributing configuration using a web service (node 2 calls get_all_configuration on node 1, and sets its own configuration accordingly) – but it would need to be saved somewhere in case node 2 restarts when node 1 isn't available. The database is an option, but has development-time issues as noted above.</li>
+	<li>saving all configuration in Zookeeper.</li>
+</ul>
+What i'd really like, though, is a configuration system that kept properties in an immutable data structure that kept track of where properties came from -- so, I could define the locations properties should come from, and then in the application I could say,  "config.getProperty('foo')"  and get the value with the highest precedence (whether that's from an override file, a database table, or whatever).  But I could also say "config.getPropertyDetails('foo') " and get a list that said "property 'foo' is set to 'bar' by local override, is set to 'groo' by the central configuration server, and the 'moo' as a fallback default." Now, why do I want that? Mainly for on-site debugging:  "I set the property in this property file, but it's not working!"    
+
+<h2>Some related (external) links:</h2>
+<ul>
+	<li><a href="http://soupinadeli.com/resilient-software-configuration/">http://soupinadeli.com/resilient-software-configuration/</a> - a good article about how a configuration system should work, and why.</li>
+	<li><a href="http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html">http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html</a> - another good article, cited above.</li>
+        <li><a href="http://stackoverflow.com/questions/1244455/where-how-to-store-distributed-configuration-data">http://stackoverflow.com/questions/1244455/where-how-to-store-distributed-configuration-data</a> - an interesting solution for all-database configuration, with a "central" table and a "local" table (for "defaults" and "overrides", like what I'm doing currently for property files).   The answerer takes it a couple steps farther, with an interesting SQL analytics query to pull it all in at once. 
+        <li><a href="http://commons.apache.org/configuration/">Apache Commons Configuration</a> comes close to the model I described above, with their <a href="http://commons.apache.org/configuration/apidocs/org/apache/commons/configuration/CompositeConfiguration.html">Composite Configuration</a> class.  I looked at Commons Configuration a year or so ago, and thought it was interesting but not quite what I was looking for (and their Hierarchical Configuration concepts can get pretty hairy). But I'm intrigued by the CompositeConfiguration class, so I need to look into it again.  
+Of course, the project is all but dead -- last updated 2008 -- but how often does a configuration library really need to change?  
+        <li><a href="https://issues.apache.org/jira/browse/CONFIGURATION-395">Interesting patch</a> to Commons Configuration for Groovy interpolation (i.e. put Groovy in property values, to be evaluated at load-time)
+        <li><a href=""></a>...more to come
+</ul>
+
+I'm open to ideas, as well...  Anyone have best-practices for distributed configuration?
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Matt Hoffman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2010</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://www.matt-thinks-so.com/blog/2010/12/10/on-configuration.html/" data-via="matt_thinks_so" data-counturl="http://www.matt-thinks-so.com/blog/2010/12/10/on-configuration.html/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/12/10/on-configuration/" title="Previous Post: On Configuration">&laquo; On Configuration</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/" title="Next Post: Cluster Management and Task Distribution: Zookeeper vs. JGroups">Cluster Management and Task Distribution: Zookeeper vs. JGroups &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/12/31/clojure-solr-quickstart/">Getting Started With Solr and Clojure</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/08/refactoring/">Refactoring and Technical Debt</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/08/octopress/">On to Octopress</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/06/complexity/">In Defense of Easy</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/28/try-server/">Takes Too Long to Build Your Project? Try Harder.</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <span class="small">(5 most recent)</span>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/matthoffman">@matthoffman</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'matthoffman',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+    <h1>On Twitter:</h1>
+    <div>
+        <p><br /><a href="http://twitter.com/matt_thinks_so"
+        target="_blank">@matt_thinks_so on Twitter.</a></p>
+        <a href="http://twitter.com/matt_thinks_so" class="twitter-follow-button" data-show-count="false">Follow @matt_thinks_so</a>
+    </div>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Matt Hoffman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'mattthinksso';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

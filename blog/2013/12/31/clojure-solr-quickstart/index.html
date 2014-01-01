@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Getting started with Solr and Clojure - matt thinks so</title>
+  <meta name="author" content="Matt Hoffman">
+
+  
+  <meta name="description" content="I’ve been doing a lot of work with Solr recently, at work and on some personal projects. I use Clojure for most personal projects these days, and the &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://www.matt-thinks-so.com/blog/2013/12/31/clojure-solr-quickstart">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="matt thinks so" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!-- bring in the Droid Sans font from Google --> 
+<link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold' rel='stylesheet' type='text/css'>
+<!-- a couple others that Octopress uses by default --> 
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-21082916-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner">    <div id="title" class="title">
+      <div id="titletext" class="titletext">
+        <h1>
+          <a href="/">
+            <img src="/images/lightbulb_dim_small.png" border="0" height="80" width="80"/>
+            <span id="namefirst">matt</span>
+            <span id="namemiddle">thinks</span>
+            <span id="namelast">so</span><span id="namepre">&hellip;</span>
+           </a>
+        </h1>
+      </div>
+    </div>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:www.matt-thinks-so.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Getting Started With Solr and Clojure</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-12-31T11:29:00-05:00" pubdate data-updated="true">Dec 31<span>st</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I’ve been doing a lot of work with Solr recently, at work and on some personal projects. I use Clojure for most personal projects these days, and the few guides out there about using Clojure with Solr (as of this writing) were fairly out-of-date, so I thought I’d offer this one.</p>
+
+<p>The primary way of interacting with Solr in Java is via the SolrJ client library. You can use it directly in Clojure if you want – it’s a fairly simple library with a straightforward API – but there are no less than 4 libraries that wrap it in Clojurey syntax: </p>
+
+<ul>
+  <li><a href="https://github.com/mwmitchell/flux">Flux</a></li>
+  <li><a href="https://github.com/mlehman/solrclj">Solrclj</a></li>
+  <li><a href="https://github.com/mattdeboard/Icarus">Icarus</a></li>
+  <li><a href="https://github.com/mikejs/clojure-solr">Clojure-Solr</a></li>
+</ul>
+
+<p>Of these, Flux, by Matt Mitchell, is the most recently updated and the only one that bundles SolrJ 4.x. Solrclj uses version 3.6.2, so it would likely work fine with 4.x without modifications, but I haven’t tried. The other two are significantly older. </p>
+
+<p>If you’re interested in following along, I’ve put together <a href="https://github.com/matthoffman/solr-clojure-sample">a quickstart application</a> that you might find useful. The samples in this post are all in that project. I used Flux as the Clojure wrapper of choice, but it would be simple to switch that out for Solrclj or to use SolrJ directly, if you felt so inclined.</p>
+
+<h2 id="a-note-on-ides-etc">A note on IDEs, etc.</h2>
+<p>Chances are, you already have a Clojure setup that you are quite happy with. But just in case you don’t:</p>
+
+<ul>
+  <li>If you’re comfortable with Emacs, go ahead and use that. There’s a lot of information about getting started with Emacs on <a href="http://clojure-doc.org/articles/tutorials/emacs.html">clojure-doc</a>.</li>
+  <li>If you’re not fully conversant in Emacs (and there’s no shame in that), and you’re coming from the Java world, I’ve included IntelliJ project files in the quickstart project. <a href="http://www.jetbrains.com/idea/download/">IntelliJ Community Edition</a> and the <a href="http://cursiveclojure.com/eap.html">Cursive Clojure</a> plugin make for an easy way to get started. Eclipse and the Counterclockwise plugin work too, and are quite popular, but I haven’t used it in a while…if you want to contribute Eclipse project files for the quickstart, send me a pull request.</li>
+</ul>
+
+<p>If you don’t have it already, <a href="http://leiningen.org">download Leiningen</a>, the most common Clojure build tool. It has a one-line installation script. </p>
+
+<h2 id="setting-up-a-sample-solr-server">Setting up a sample Solr server</h2>
+
+<p>This sample application connects to a running Solr server. Setting up a server is simple. One simple way to do it:</p>
+
+<p>Download Solr from <a href="http://lucene.apache.org/solr/">http://lucene.apache.org/solr/</a> and unzip it.
+Go into the <code>examples/</code> directory and run:</p>
+
+<pre><code> java -jar start.jar
+</code></pre>
+
+<p>That will start a sample Solr server.  Keep that terminal open.</p>
+
+<h2 id="repl">REPL</h2>
+
+<p>Now that there’s a Solr server running, time to fire up a REPL in the solr-clojure-sample project. 
+If you’re using IntelliJ, you can do that using <code>Run -&gt; lein repl</code>, and you’ll have the REPL there inside your IDE, and you can execute things in the editor window directly in the REPL and all that goodness that Emacs users are used to. You can also choose “debug” instead of “run”, and you’ll be able to set breakpoints, which Emacs users are not used to. </p>
+
+<p>Alternately, you can just run “lein repl” from the command line. You miss out on the IDE integration goodness, but it will work fine.</p>
+
+<p>Either way you start the REPL it will automatically load <code>dev/user.clj</code> (because project.clj says to).
+This loads a set of useful namespaces as well as some helpful functions for development: init, start, stop, go, and reset.
+For more on the philosophy behind these, see <a href="http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded">Stuart Sierra’s blog post</a> or the <a href="http://thinkrelevance.com/blog/2013/05/29/stuart-sierra-episode-032">related podcast</a>. These have nothing to do with Solr specifically – they’re just a Clojure software architecture design pattern – but since the quickstart doesn’t make much sense if you don’t understand what they’re for, I’ll go into a little detail.</p>
+
+<p>In short, there’s a map called <code>blast.solr/config</code> that contains a variety of configuration properties for the app. A production app would take these config settings and use them to build a Solr connection which it would then hold on to for the life of the application. How it holds onto that connection will vary by application… for development purposes, we just have an atom in dev/user.clj called “system”. Calling <code>(go)</code> from your REPL will use the config map in <code>blast.solr/config</code> and connect to your sample Solr server, then populate the <code>system</code> atom with that connection. </p>
+
+<p>If for some reason you make changes that require resetting the connection, or changes to the configuration map, you can run:</p>
+
+<pre><code>(reset)
+</code></pre>
+
+<p>This will close any existing connection, reload the namespaces, and reconnect. </p>
+
+<h2 id="load-data">Load Data</h2>
+
+<p>Solr isn’t very interesting without any data, so let’s load some. I’ve included a text file called “sonnets.edn” which contains all of Shakespeare’s sonnets, in <a href="https://github.com/edn-format/edn">EDN</a> format. The fields are already named using some Solr conventions: *_t to denote text fields, *_i to denote ints, and so on. 
+To load the data, make sure you’ve run <code>(go)</code> in the REPL to establish a connection, and then run: </p>
+
+<pre><code> ;; We'll read a file line-by-line and load it into Solr
+ (flux/with-connection (conn)
+                    (with-open [rdr (io/reader "sonnets.edn")]
+                      (doseq [line (line-seq rdr)]
+                        (println line)
+                        (flux/add (edn/read-string line)))
+                      (flux/commit)
+                      (flux/query "*:*"))) ; query our new data
+</code></pre>
+
+<h2 id="run-some-queries">Run some queries</h2>
+
+<p>The quickstart app has a few helper functions in user.clj that might be useful. <code>q</code>, for example, runs queries:</p>
+
+<pre><code>(q "*:*")
+</code></pre>
+
+<p>There are some commented-out forms there that will load some sample data into Solr for experimentation. For example:</p>
+
+<pre><code> (q "line_t:desire")
+ (q "line_t:desire" {:deftype "edismax"}) ; send query args if you want
+ (q "line_t:desire" {:deftype :edismax})  ; flux  will convert keywords into strings, so use them at will.
+ (q "{!edismax qf=\"line_t\"}desire")     ; version with local variables. Anything that's valid in a Solr query is valid here.
+</code></pre>
+
+<p>Enjoy!</p>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Matt Hoffman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-12-31T11:29:00-05:00" pubdate data-updated="true">Dec 31<span>st</span>, 2013</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://www.matt-thinks-so.com/blog/2013/12/31/clojure-solr-quickstart/" data-via="matt_thinks_so" data-counturl="http://www.matt-thinks-so.com/blog/2013/12/31/clojure-solr-quickstart/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/10/08/refactoring/" title="Previous Post: Refactoring and Technical Debt">&laquo; Refactoring and Technical Debt</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/12/31/clojure-solr-quickstart/">Getting Started With Solr and Clojure</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/10/08/refactoring/">Refactoring and Technical Debt</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/08/octopress/">On to Octopress</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/06/complexity/">In Defense of Easy</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/28/try-server/">Takes Too Long to Build Your Project? Try Harder.</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <span class="small">(5 most recent)</span>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/matthoffman">@matthoffman</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'matthoffman',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+    <h1>On Twitter:</h1>
+    <div>
+        <p><br /><a href="http://twitter.com/matt_thinks_so"
+        target="_blank">@matt_thinks_so on Twitter.</a></p>
+        <a href="http://twitter.com/matt_thinks_so" class="twitter-follow-button" data-show-count="false">Follow @matt_thinks_so</a>
+    </div>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Matt Hoffman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'mattthinksso';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://www.matt-thinks-so.com/blog/2013/12/31/clojure-solr-quickstart/';
+        var disqus_url = 'http://www.matt-thinks-so.com/blog/2013/12/31/clojure-solr-quickstart/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

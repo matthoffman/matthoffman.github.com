@@ -9,7 +9,7 @@
   <meta name="author" content="Matt Hoffman">
 
   
-  <meta name="description" content="Alternate title: Episode IV: A New Hope I&#8217;m restarting this blog after a long hiatus &#8211; a couple of years, at least. It looks like my old &hellip;">
+  <meta name="description" content="I&#8217;ve been musing recently on how to scale our configuration system up and out: making it work more dynamically for single nodes, and handle &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,140 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/12/10/on-configuration/">On Configuration</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-10T00:00:00-05:00" pubdate data-updated="true">Dec 10<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content">I&#8217;ve been musing recently on how to scale our configuration system up and out: making it work more dynamically for single nodes, and handle multiple nodes&#8230;well, at all.
+<h2>How it works now</h2>
+Right now, our configuration is spread across the following places, roughly in order of precedence:
+<ul>
+	<li>System properties (-D properties set on the command line)</li>
+	<li>a user-editable property file, for overrides to default properties.  This is preserved during system upgrades.</li>
+	<li>a &#8220;system defaults&#8221; property file, user-visible but overwritten during upgrades.</li>
+	<li>a database table:  for a while, we were standardizing on properties in the database.  More on this later&#8230;</li>
+	<li>some property files buried inside jars, which hold some database queries, some default values, and so on.</li>
+	<li>log4j.xml</li>
+</ul>
+We use a MergedPropertyPlaceholderConfigurer, along with a couple other configuration classes available <a title="blast-config on github" href="https://github.com/matthoffman/blast-config">on github</a>) that merges properties from most of the above locations together, ranks them in order of precedence, and then sets them at startup time using Spring&#8217;s standard placeholder syntax (${property.name}). Database properties are loaded from a table using a special Spring property loader.
+
+So any property can be set in a higher-precedence location and it will override one set in a lower-precedence location.
+
+In practice, new properties tend to get set in the property file. Why? Because database changes require a patch (like a migration in the Rails world) which needs to get migrated to each applicable environment.  Deploying the code to a development or test server then requires both a code update and a database update. In practice, the dependency between the code and particular database patches is a bit of a hassle &#8211; certainly far more so than just adding it to a property file which gets deployed along with the code.  A bad motivation for keeping properties in files?  Perhaps&#8230; but it is the reality of it. A system that raises the barrier of entry for doing &#8220;the right thing&#8221; is a bad system.  Which brings us to&#8230;
+<h2>Problems with current system</h2>
+<ol>
+	<li>property files are cumbersome in a distributed environment.  Many of our deployments are single-node, but more and more they&#8217;re distributed, and distributed deployments should be our default going forward.</li>
+	<li>For properties stored in the DB, adding, removing or updating any property requires a DB task, and then a DB refresh, which has the effect of discouraging parameterizing things. You tend to think, &#8220;eh, well&#8230; I&#8217;ll just hard-code this for now&#8230;&#8221;</li>
+	<li>Properties are loaded at startup time only – you can&#8217;t change property values without changing each property file and then restarting each node.</li>
+</ol>
+<h2>Requirements for a new system:</h2>
+I&#8217;d like to borrow requirements from <a href="http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html">http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html</a>:
+<ol>
+<li>Reloading a configuration should be a simple operation for the operator to trigger.
+<li>It should not be possible to load an invalid configuration. If the operator tries to do so, the application should continue running with the old configuration.
+<li>When reloading a configuration, the application should smoothly switch from the old configuration to the new configuration, ensuring that it is always operating with a consistent configuration. More precisely, an operational sequence that requires a consistent set of configuration parameters for the entire sequence should complete its sequence with the same set of configuration parameters as were active when the sequence started. – For us, this is actually pretty easy.  Our app depends on a task distribution framework, meaning that work is defined as a series of tasks with defined beginnings and endings.  So, we merely need to load the configuration at the beginning of each discrete unit of work.
+<li>The application should provide feedback so that the operator knows what the application is doing. Logging, notification or statistics about configuration reloads should be available.
+
+<br /><br />&#8230;and I&#8217;d add:
+<li>We should be able to set configurations for all nodes at once (this could mean using the database, or perhaps a command-line tool that sprays configurations out to the various nodes, plus a web service to tell nodes to reload..or something else entirely).
+<li>We should be able to view the current configuration for each node easily.
+<li>We should be able to share configuration between our app and other related applications, again, this could be database, or a web service that exposes our properties to other applications.
+</ol>
+<h2>Current thoughts</h2>
+At the code level, I&#8217;m thinking of loading properties at the beginning of each task, using a base class or something built into the framework.
+Reloading and interrogating the configuration could be via a web service (get_configuration / set_configuration). For requirement 3, the easiest option seems to be to use Configgy as a configuration base.
+As far as centralized configuration goes, I&#8217;m up in the air. Some options:
+<ul>
+	<li>Spraying config files (scp&#8217;ing configuration files to each server, which would have to be tied to either an automatic poll of files, or a manual &#8220;reload_configuration&#8221; web service call)</li>
+	<li>distributing configuration using a web service (node 2 calls get_all_configuration on node 1, and sets its own configuration accordingly) – but it would need to be saved somewhere in case node 2 restarts when node 1 isn&#8217;t available. The database is an option, but has development-time issues as noted above.</li>
+	<li>saving all configuration in Zookeeper.</li>
+</ul>
+What i&#8217;d really like, though, is a configuration system that kept properties in an immutable data structure that kept track of where properties came from &#8211; so, I could define the locations properties should come from, and then in the application I could say,  &#8220;config.getProperty(&#8216;foo&#8217;)&#8221;  and get the value with the highest precedence (whether that&#8217;s from an override file, a database table, or whatever).  But I could also say &#8220;config.getPropertyDetails(&#8216;foo&#8217;) &#8221; and get a list that said &#8220;property &#8216;foo&#8217; is set to &#8216;bar&#8217; by local override, is set to &#8216;groo&#8217; by the central configuration server, and the &#8216;moo&#8217; as a fallback default.&#8221; Now, why do I want that? Mainly for on-site debugging:  &#8220;I set the property in this property file, but it&#8217;s not working!&#8221;    
+
+<h2>Some related (external) links:</h2>
+<ul>
+	<li><a href="http://soupinadeli.com/resilient-software-configuration/">http://soupinadeli.com/resilient-software-configuration/</a> - a good article about how a configuration system should work, and why.</li>
+	<li><a href="http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html">http://jim-mcbeath.blogspot.com/2010/01/reload-that-config-file.html</a> - another good article, cited above.</li>
+        <li><a href="http://stackoverflow.com/questions/1244455/where-how-to-store-distributed-configuration-data">http://stackoverflow.com/questions/1244455/where-how-to-store-distributed-configuration-data</a> - an interesting solution for all-database configuration, with a &#8220;central&#8221; table and a &#8220;local&#8221; table (for &#8220;defaults&#8221; and &#8220;overrides&#8221;, like what I&#8217;m doing currently for property files).   The answerer takes it a couple steps farther, with an interesting SQL analytics query to pull it all in at once. 
+        <li><a href="http://commons.apache.org/configuration/">Apache Commons Configuration</a> comes close to the model I described above, with their <a href="http://commons.apache.org/configuration/apidocs/org/apache/commons/configuration/CompositeConfiguration.html">Composite Configuration</a> class.  I looked at Commons Configuration a year or so ago, and thought it was interesting but not quite what I was looking for (and their Hierarchical Configuration concepts can get pretty hairy). But I&#8217;m intrigued by the CompositeConfiguration class, so I need to look into it again.  
+Of course, the project is all but dead &#8211; last updated 2008 &#8211; but how often does a configuration library really need to change?  
+        <li><a href="https://issues.apache.org/jira/browse/CONFIGURATION-395">Interesting patch</a> to Commons Configuration for Groovy interpolation (i.e. put Groovy in property values, to be evaluated at load-time)
+        <li><a href=""></a>&#8230;more to come
+</ul>
+
+I&#8217;m open to ideas, as well&#8230;  Anyone have best-practices for distributed configuration?
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/03/05/oh-oracle/">Oh, Oracle</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-05T00:00:00-05:00" pubdate data-updated="true">Mar 5<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>So, I was responsible for a pretty unfortunate bug today — no way around it, I messed up.  It was classic — there was a &#8220;TODO&#8221; block where I meant to come back and finish some code, and no doubt got distracted by some very valid crisis. </p> 
+<p>Fortunately, it was caught before it affected production data, but it was in test, and visible, and it was scary that it had gotten that far.</p>
+<p>But I couldn&#8217;t help but be bitter about how that block of code came to be in the first place:  the code that contained the bug was part of an elaborate scheme designed to work around joining to a particularly large table in certain circumstances.</p>
+<p>Now, it’s big data (well, at least tens of millions of rows) …we have to do what we can for efficiency.  But it made me slightly bitter that the more we optimize for relational databases, trying to eke more and more performance, the farther we move from a clear data model, and the less we&#8217;re using the &#8220;R&#8221; in RDBMS. We go through contortions, and in the process introduce bugs.</p> 
+<p>I’m not sure who that might be a lesson for, but perhaps if anyone is dead-set on using a tried-and-true RDBMS to avoid bugs in newer systems, whether MapReduce or a “NoSQL” store, it’s worth noting that there is some tradeoff here:  bugs in the data store in question vs. bugs you introduce into your own code due to the increased complexity as you contort your data model to make it scale where you need it to go.</p>
+ 
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -379,6 +513,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2013/12/31/clojure-solr-quickstart/">Getting Started With Solr and Clojure</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2013/10/08/refactoring/">Refactoring and Technical Debt</a>
       </li>
     
@@ -392,10 +530,6 @@
     
       <li class="post">
         <a href="/blog/2012/01/28/try-server/">Takes Too Long to Build Your Project? Try Harder.</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/01/24/greasemonkey/">Greasemonkey Is Underrated</a>
       </li>
     
   </ul>
@@ -451,7 +585,7 @@
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2013 - Matt Hoffman -
+  Copyright &copy; 2014 - Matt Hoffman -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
