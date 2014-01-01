@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Cluster Management and Task Distribution part 2: Caching - matt thinks so</title>
+  <meta name="author" content="Matt Hoffman">
+
+  
+  <meta name="description" content="The question
+Which technology stack makes more sense for a distributed caching framework? The backstory I’ve gotten a fair amount of hits on this &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://www.matt-thinks-so.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="matt thinks so" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!-- bring in the Droid Sans font from Google --> 
+<link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold' rel='stylesheet' type='text/css'>
+<!-- a couple others that Octopress uses by default --> 
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-21082916-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner">    <div id="title" class="title">
+      <div id="titletext" class="titletext">
+        <h1>
+          <a href="/">
+            <img src="/images/lightbulb_dim_small.png" border="0" height="80" width="80"/>
+            <span id="namefirst">matt</span>
+            <span id="namemiddle">thinks</span>
+            <span id="namelast">so</span><span id="namepre">&hellip;</span>
+           </a>
+        </h1>
+      </div>
+    </div>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:www.matt-thinks-so.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Cluster Management and Task Distribution Part 2: Caching</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-05-15T00:00:00-04:00" pubdate data-updated="true">May 15<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>The question</h2>
+<p>Which technology stack makes more sense for a distributed caching framework?</p>
+
+<h2>The backstory</h2>
+
+<p>I’ve gotten a fair amount of hits on <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">this post</a> comparing JGroups and Zookeeper for task distribution and cluster management. 
+I wanted to write an update of what I’ve investigated so far… unfortunately, my free time to investigate this specific issue has gone kapoof. Getting rid of the single point of failure in task distribution has gone on the backlog again. </p>
+
+<p>However, in the meantime, I’ve done some investigation on distributed caches. This was the same app, but a different need – I needed a quick, practical way to distributed data across the cluster, so I tested Infinispan and Hazelcast. <br /></p>
+
+<p>Infinispan uses JGroups behind the scenes to do its clustering; Hazelcast has its own homegrown set of protocols.</p>
+
+<p>Zookeeper, for all its pluses as a cluster management option, doesn’t have anything to offer for this use case. And since distributed caching came up first as a production requirement, Zookeeper may lose out by default; either of these caches can also be adapted for cluster management and task distribution (in the form of a fully-replicated cache, if nothing else). So if they’re already in the stack, and using them isn’t too much work, that’s likely what we’ll use. It frustrates me to have to make technical decisions this way, but the way that our timelines go, that’s often the way it is. </p>
+
+<h2>Why not Terracotta?</h2>
+
+<p>Terracotta is often at the top of the list when talking about distributed caches, so why wasn’t it here? 
+Three reasons: </p>
+<ul>
+  <li>This particular client has had bad experiences with Terracotta in the past, and was resistent to installing it here.</li>
+  <li>Terracotta requires a server component, which is more operational overhead.  It also makes it more difficult to transparently switch between clustering technologies.</li>
+  <li>Terracotta&#8217;s license (at least, last I checked) is sort-of free, but with a stronger-than-normal attribution clause; adding commercial license cost wasn&#8217;t possible for this minor release. The attribution clause wasn&#8217;t entirely a deal-breaker, but it&#8217;s certainly less appealing.</li>
+</ul>
+
+<p>The first reason there is more significant than the other two. Terracotta may still end up as a distributed caching option in the future.</p>
+
+<p>Unfortunately, this isn’t as in-depth or thorough of an investigation as <a href="http://www.matt-thinks-so.com/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups.html">part 1</a>. I’m not going to go back through the requirements and then see how the candidates stack up. Infinispan and Hazelcast, our two main candidates, have a very similar feature list on paper, so it came down to a hands-on investigation instead. </p>
+
+<h2>The plan</h2>
+
+<p>I already had a generic cache interface that the app was using, so my goal was to write an implementation for both Infinispan and Hazelcast and allow us to switch between the two at startup time. That proved to be a bit of a trick – both have Java configuration options (instead of XML-only configuration) in their most recent versions. Both have some tricks to them.<br /></p>
+
+<p>My goal was to configure either cache with just two properties: </p>
+<pre>
+cache.type=hazelcast
+cache.members=192.168.221.10, 192.168.221.11, 192.168.221.12, 192.168.221.13
+</pre>
+
+<p>The first obviously tells the app whether to use Hazelcast or Infinispan. The second points to at least some of the other cache members. That’s necessary because multicast – which is the default discovery option for both of these products – isn’t available on EC2, which is one of our possible deployment options. For Hazelcast, the list of nodes doesn’t need to be a complete list; it will use the listed nodes as seeds for a complete list. Infinispan, on the other hand, is more unclear.</p>
+
+<h2>Implementation</h2>
+
+<p>I ran into a few issues. For example, in Infinispan, my clever code that parsed the address list, found if one of them applied to the current server, and set the bind address appropriately ran into some snags.  Netstat showed the following: </p>
+
+<pre>
+tcp        0      0 ::ffff:10.192.171.127:8016  :::*                        LISTEN      
+</pre>
+
+<p>It was binding an IPv6 compatibility address. And my “separate port from address” code isn’t smart enough to handle IPv6 addresses, so this wasn’t going to work.
+I worked around it (in this case, I hardcoded out IPv6 addresses…that’s not on my roadmap right now) and eventually got both working.</p>
+
+<p>Writing the code that actually used the distributed caches was painless. The implementations of my simple cache interface came together without any problem; both implement both ConcurrentMap and JCache’s Cache interface, so they both fit in easily.</p>
+
+<p>Unfortunately, I was still running into <a href="https://issues.jboss.org/browse/JGRP-1253">Infinispan issues</a> when a node died and then later rejoined the cluster. </p>
+
+<p>Hazelcast, on the other hand, worked out of the box in this case, so that’s what is going on into testing at the client site.</p>
+
+<p>All in all, Hazelcast surprised me.  It seems to be gaining acceptance on the web:  anecdotally, posts on Stack Overflow from two years ago tended to say “What’s Hazelcast?”.  Last year they would say “Hazelcast? That’s unproven”. This year, when it’s showing up on recommendation lists. Granted: small sample size. But that’s what we have to go on.
+In my testing, it works out of the box and does what it’s supposed to.</p>
+
+<p>Now, it’s worth noting that adding Hazelcast – or any distributed caching – doesn’t come without a cost. Unfortunately, I don’t have that cost quantified, although I’ll try to update this post with measurements if people are curious. But the time spent writing data to and reading data from distributed cache often slow down the application to the point where two machines with a distributed cache are slower than one machine without<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup>. The break-even point depends on the technology, the workload, and the hardware, and how careful you are with what is written to and read from the distributed cache. The higher the consistency and durability guarantees of the cache, the more painful that cost will be.  </p>
+
+<p>It’s probably worth digging into this cost briefly. It might seem at first glance that this shouldn’t be the case: after all, you’re just storing data in memory, and when a machine on the cluster needs some data, it asks other machines before going to the database. As long as getting the data from another local machine is faster than going to the database and the cache hit rate is reasonably high, it seems like it should be faster.  Alas, it is not the case. </p>
+
+<p>It doesn’t work that way for a couple of reasons: first, because you don’t have any durability guarantees if, after calling cache.put(), it just lives in that first machine’s local memory. If that machine goes down, the data is lost. So most caches (including Infinispan and Hazelcast) will, by default, block the put() call until that data has also been written out to at least one other machine. Of course, if you don’t need that durability, you have options – you can turn off replication entirely, or let it happen in a write-behind queue, so that there’s only a limited window of time in which the data lives on only one machine.</p>
+
+<p>The cache is also likely to be slower because attempts to be clever about which machine holds each element in the cache. It tries to distribute cached data around the available nodes, as well as offer a quick way to compute which machine owns each piece of data, so that it doesn’t have to broadcast a “who has cache key X?” every time you do a cache.get(X).  By default, it does this using a hash function on the cache key.  That means that, when you call cache.put(..) on machine A, there’s no guarantee that the data will stay on machine A. So after calling put(), you may have to wait for the data is written to the machine that is declared the owner of that value, based on the hash of the cache key. It’s worth noting that Terracotta doesn’t work this way – data ownership is a function of the node that last used the data. But Infinispan and Hazelcast both do. </p>
+
+<p>Now, those who are used to distributed systems, this will be old hat, but it surprises a lot of people.  Two machines is very often slower than one. That’s why folks moving to Hadoop and HBase or other dedicated clustering datastores designed to scale to dozens o hundreds of machines find that they don’t start equaling single-machine performance until they move to several machines. Anecdotally, that is often around 5 machines, although it depends heavily on the workload – how much data is being written to and read from distributed storage vs. other uses of time (CPU, other I/O). </p>
+
+<p>So, the moral of the story: be very careful what’s going in and out of cache. “Transparent caching” cannot be – it has a very significant cost over and above the cost of just writing the blocks of local memory, UNLESS you remove enough consistency guarantees that it can happen less obtrusively after the fact.</p>
+
+<p>In related news, Akka 2.0 will gain the clustering support that’s currently reserved for the commercial offering (“Cloudy Akka”)… I’ll be interested to see what that looks like. </p>
+
+<h2>Conclusion</h2>
+
+<p>I’ve split the conclusion into a separate post, <a href="/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>.</p>
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>If you haven’t seen it, check out the <a href="http://www.quora.com/What-are-the-numbers-that-every-computer-engineer-should-know-according-to-Jeff-Dean">“numbers every computer engineer should know”</a> from Jeff Dean’s talk “Building Software Systems at Google and Lessons Learned” at Stanford (<a href="http://www.cs.cornell.edu/projects/ladis2009/talks/dean-keynote-ladis2009.pdf">slides</a>, <a href="http://goo.gl/0MznW]">video</a>).  It has some really useful order-of-magnitude values you can use for back-of-the-envelope estimates of the cost of distributed caching.<a href="#fnref:1" rel="reference">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Matt Hoffman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-05-15T00:00:00-04:00" pubdate data-updated="true">May 15<span>th</span>, 2011</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://www.matt-thinks-so.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2/" data-via="matt_thinks_so" data-counturl="http://www.matt-thinks-so.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/" title="Previous Post: Cluster Management and Task Distribution: Zookeeper vs. JGroups">&laquo; Cluster Management and Task Distribution: Zookeeper vs. JGroups</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/11/05/cluster-management-and-task-distribution-part-3/" title="Next Post: Cluster Management and Task Distribution, part 3">Cluster Management and Task Distribution, part 3 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/10/08/refactoring/">Refactoring and Technical Debt</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/08/octopress/">On to Octopress</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/06/complexity/">In Defense of Easy</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/28/try-server/">Takes Too Long to Build Your Project? Try Harder.</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/24/greasemonkey/">Greasemonkey Is Underrated</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <span class="small">(5 most recent)</span>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/matthoffman">@matthoffman</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'matthoffman',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+    <h1>On Twitter:</h1>
+    <div>
+        <p><br /><a href="http://twitter.com/matt_thinks_so"
+        target="_blank">@matt_thinks_so on Twitter.</a></p>
+        <a href="http://twitter.com/matt_thinks_so" class="twitter-follow-button" data-show-count="false">Follow @matt_thinks_so</a>
+    </div>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Matt Hoffman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'mattthinksso';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://www.matt-thinks-so.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2/';
+        var disqus_url = 'http://www.matt-thinks-so.com/blog/2011/05/15/cluster-management-and-task-distribution-part-2/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

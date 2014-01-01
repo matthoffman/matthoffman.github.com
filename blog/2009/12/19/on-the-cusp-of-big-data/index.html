@@ -1,0 +1,300 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>on the cusp of Big Data - matt thinks so</title>
+  <meta name="author" content="Matt Hoffman">
+
+  
+  <meta name="description" content="Alternate title: Episode IV: A New Hope I&#8217;m restarting this blog after a long hiatus &#8211; a couple of years, at least. It looks like my old &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://www.matt-thinks-so.com/blog/2009/12/19/on-the-cusp-of-big-data">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="matt thinks so" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!-- bring in the Droid Sans font from Google --> 
+<link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold' rel='stylesheet' type='text/css'>
+<!-- a couple others that Octopress uses by default --> 
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-21082916-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner">    <div id="title" class="title">
+      <div id="titletext" class="titletext">
+        <h1>
+          <a href="/">
+            <img src="/images/lightbulb_dim_small.png" border="0" height="80" width="80"/>
+            <span id="namefirst">matt</span>
+            <span id="namemiddle">thinks</span>
+            <span id="namelast">so</span><span id="namepre">&hellip;</span>
+           </a>
+        </h1>
+      </div>
+    </div>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:www.matt-thinks-so.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">On the Cusp of Big Data</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-12-19T00:00:00-05:00" pubdate data-updated="true">Dec 19<span>th</span>, 2009</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><i>Alternate title:</i> <b>Episode IV: A New Hope</b>
+
+<p>I&#8217;m restarting this blog after a long hiatus &#8211; a couple of years, at least.  It looks like my old posts were purged in the meantime, but that&#8217;s probably for the best<a name="to1" href="#1"><sup>1</sup></a>.  My musings about Hibernate from 2007 are probably not that interesting now<a name="to2" href="#2"><sup>2</sup></a>.</p>
+<p>Where I&#8217;m coming from:</p>
+<p>I work on a team that, in a lot of ways, is on the cusp of Big Data:  we deal with gigabytes, but not terabytes of data, and we don&#8217;t have endless racks of commodity servers.  We have a homegrown task framework that follows a typical master-worker pattern and allows for tasks to be distributed among nodes on different servers.  That works well, and I like the framework in general &#8211; it could use some cleaning up, but it&#8217;s simple, clean and functional.</p>
+<p>Data, though, is all stored inside an Oracle database, and we&#8217;re knocking at the edge of it&#8217;s capabilities.  We haven&#8217;t entirely maxed it out yet, but each performance gain has been harder to come by, and we can easily see the time approaching where it will be cheaper to rearchitect how we&#8217;re storing and serving data rather than eke more performance by smarter partitioning, better queries, or a faster SAN.</p>
+<p>So over the past several months I&#8217;ve been reading about some of the competitors in the big-data field, and sketching ideas for what I&#8217;d like our architecture to look like going forward.  Things like MapReduce (Hadoop), HBase, Cassandra, or Terracotta, or a number of other ideas &#8211; different types of products, all with the goal of scaling data beyond a single server.  But unlike a lot of folks looking at these options, we have an existing product in production, based on a framework that does 80% of what we need.  So I find myself on a seesaw, going between the newest, coolest thing I&#8217;ve read about, and then the pain of rewriting what we have on a non-existent timeline when what we have works so well &#8211; at today&#8217;s data volumes.</p>
+<p>I decided to reinstate this blog to collect what I&#8217;ve learned so far.</p>
+<p/>
+<p/>
+<p><a name="1" href="#to1"><sup>1</sup></a> Does anyone else have the problem of starting blogs like new years&#8217; resolutions and then losing track of them?  I probably have three out there, tied to some forgotten username on goodness knows which host, and they&#8217;re probably saying very insightful things about Hibernate 2.0.</p>
+<p><a name="2" href="#to2"><sup>2</sup></a> Turns out, I did recover some old posts from a Typo blog from 2006.  A couple of the most boring just didn&#8217;t make the move over, but most of them are here for morbid curiosity about what seemed interesting at the time.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Matt Hoffman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-12-19T00:00:00-05:00" pubdate data-updated="true">Dec 19<span>th</span>, 2009</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://www.matt-thinks-so.com/blog/2009/12/19/on-the-cusp-of-big-data/" data-via="matt_thinks_so" data-counturl="http://www.matt-thinks-so.com/blog/2009/12/19/on-the-cusp-of-big-data/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2006/09/13/ssl-curiosity/" title="Previous Post: SSL curiosity">&laquo; SSL curiosity</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/03/05/oh-oracle/" title="Next Post: Oh, Oracle">Oh, Oracle &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/10/08/refactoring/">Refactoring and Technical Debt</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/08/octopress/">On to Octopress</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/06/complexity/">In Defense of Easy</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/28/try-server/">Takes Too Long to Build Your Project? Try Harder.</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/24/greasemonkey/">Greasemonkey Is Underrated</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <span class="small">(5 most recent)</span>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/matthoffman">@matthoffman</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'matthoffman',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+    <h1>On Twitter:</h1>
+    <div>
+        <p><br /><a href="http://twitter.com/matt_thinks_so"
+        target="_blank">@matt_thinks_so on Twitter.</a></p>
+        <a href="http://twitter.com/matt_thinks_so" class="twitter-follow-button" data-show-count="false">Follow @matt_thinks_so</a>
+    </div>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Matt Hoffman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'mattthinksso';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

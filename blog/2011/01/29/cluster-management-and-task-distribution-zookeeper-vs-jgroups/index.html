@@ -1,0 +1,394 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Cluster Management and Task Distribution: Zookeeper vs. JGroups - matt thinks so</title>
+  <meta name="author" content="Matt Hoffman">
+
+  
+  <meta name="description" content="The question
+Which technology stack makes more sense for a distributed task-management framework?
+The backstory
+The target app I’m working on at the &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://www.matt-thinks-so.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="matt thinks so" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/lib/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!-- bring in the Droid Sans font from Google --> 
+<link href='http://fonts.googleapis.com/css?family=Droid+Serif:regular,italic,bold' rel='stylesheet' type='text/css'>
+<!-- a couple others that Octopress uses by default --> 
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-21082916-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner">    <div id="title" class="title">
+      <div id="titletext" class="titletext">
+        <h1>
+          <a href="/">
+            <img src="/images/lightbulb_dim_small.png" border="0" height="80" width="80"/>
+            <span id="namefirst">matt</span>
+            <span id="namemiddle">thinks</span>
+            <span id="namelast">so</span><span id="namepre">&hellip;</span>
+           </a>
+        </h1>
+      </div>
+    </div>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:www.matt-thinks-so.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about.html">About</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Cluster Management and Task Distribution: Zookeeper vs. JGroups</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-01-29T00:00:00-05:00" pubdate data-updated="true">Jan 29<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2 id="internal-source-marker_0.6950423333328217">The question</h2>
+Which technology stack makes more sense for a distributed task-management framework?
+<h2>The backstory</h2>
+The target app I’m working on at the moment is a task-management framework: it distributes discrete units of work (tasks) to workers which may be spread across multiple servers.  Right now, it’s a single-master system: we can add as many nodes as we want (at runtime, if we want) but only one can ever serve as the “master” node, and that node can’t fail.  The master needs to keep track of a bunch of tasks, which have a hierarchical structure (tasks can have one parent and 0-n child tasks).  It manages the tasks&#8217; interdependencies, checks on the health of the worker nodes, and redistributes tasks if they time out or if their worker node goes down.
+A lot of task-management systems put tasks in one or more queues (Resque, beanstalkd, etc.); that’s what we did as well, in our first version.  And this works well; you can model a lot of problem domains this way.  But our task data model is a bit more complex than that, though: tasks can have children, and can define whether those children should be executed in serial or in parallel.  So you can define that task A must execute before task B, but then tasks C through Z can execute in parallel.  When Task B executes, it can decide to split its workload up into 100 smaller tasks, B1 through B100, which all execute in parallel, and would all execute before C starts.  So the tasks end up looking more like a tree than a queue&#8230;modeling them as a queue gets a bit convoluted.  You could argue that the best answer would be to re-model our tasks to fit within Resque, beanstalkd, or the like, but at this point that&#8217;d actually be more work. And you can&#8217;t deny this is fun stuff to think about&#8230;
+
+So the single point of failure needs to go.  I’m looking at some of the options for instead distributing the data (the tree of tasks, who&#8217;s executing what, whether the nodes are healthy, whether a task has timed out) across multiple servers.
+<h2>The requirements</h2>
+<dl>
+  <dt>Consistency</dt><dd>The task tree should be shared between more than one server, with guaranteed consistency.  I.e if server A is serving as the master node and it goes down, another server needs to be able to pick up and continue, with the exact same view of the current task tree.  We don’t want tasks to accidentally get dropped or executed twice because server B’s version of the task tree wasn&#8217;t up-to-date.</dd><br />
+  <dt>Elasticity</dt><dd>Nodes have to be able to come online and participate in the cluster, and then drop off again.  The full list of nodes can’t be hard-coded at startup.</dd><br />
+	<dt>Partition-tolerance</dt><dd>Ideally, we should be able to handle a network partition.  We can do that at the expense of availability: that is, if there are 5 nodes, numbered 1 through 5, and nodes 1 and 2 get separated from 3 through 5, it’s OK for 1 and 2 to realize they’re the minority and stop processing.   The following caveats apply:
+<ol>
+	<li>We need a way to handle an intentional reduction in servers.  That is, if we spun up 10 extra cloud servers for a few hours to help in peak processing, we’d need a way to tell the cluster that we were going to spin them back down again, so the remaining nodes didn’t think they were a minority segment of a partitioned network.</li>
+	<li>In case of a catastrophic failure of a majority of servers, I’d like a way to kick the remaining nodes and tell them to process anyway.  But I’m ok if that requires manual intervention&#8230; that’s an extreme case.</li>
+</ol></dd>
+<dt>Scalability</dt><dd>I’m targeting 100 nodes as a practical maximum.  In production, we’ve used up to 5 nodes.  I don’t expect us to go above 10 in the near future, so I’m adding an order-of-magnitude safety margin on top of that.  Of course, when the task management framework goes open source, 100 nodes will be quite feasible for users with different problem domains and deployment patterns.  In our typical deployment scenarios, customers prefer fewer, larger servers.</dd><br />
+<dt>EC2</dt><dd> The clustering option has to be able to run on EC2 instances.  It can&#8217;t depend on IP multicast.</dd><br />
+<dt>Deployment simplicity</dt><dd>  As few moving parts as possible, to make integrating and deploying the software as simple as possible. Our app is often deployed by the client on their hardware, so we&#8217;d like to make their lives as easy as possible. And as the framework goes open source, of course, it&#8217;s going to be more helpful for a more people if it has a low barrier of entry.</dd><br />
+<dt>Implementation simplicity</dt><dd>  The less code I write, the fewer bugs I introduce.</dd><br />
+<dt>Event bus</dt><dd>  Nodes can also pass events to other nodes, typically by multicast.  We use JMS for this currently, and we can continue to do so, but it’d be nice to get rid of that particular moving part if possible.</dd><br />
+</dl>
+There is not necessarily a requirement to persist all tasks to disk, in order to keep them safe between server restarts.  In our previous version, tasks were kept in a JMS queue, and we ended up turning disk persistence off &#8211; in practice, in the case of a failure that requires manual intervention (for example, a JMS broker failure, or the failure of all nodes that had tasks in memory) almost always means that we want to manually restart jobs after the system comes back up &#8211; possibly different jobs, possibly a reduced set of tasks to make up time.  We found that we rarely want to start back up exactly where we left off.
+So, if the solution automatically persists to disk, I’ll probably create a way to bypass that if necessary (a command-line flag that lets us clear the current tasks on startup, perhaps).
+<h2>Zookeeper</h2>
+<table class="zebra-striped"><col width="*"></col> <col width="*"></col> 
+<tbody>
+<tr>
+<td>Consistency</td>
+<td>Zookeeper pushes everything to disk – writes are always persisted, for safety.
+Zookeeper is designed for cluster coordination, and it’s well-thought-out.  It has documented consistency guarantees, lots of documented recipes for things like leader election, and supports subscription of listeners on tree changes.</td>
+</tr>
+<tr>
+<td>Elasticity</td>
+<td>We’d have to pick three servers up front that would serve as Zookeeper nodes as well as normal nodes. Those nodes woulnd’t be elastic, but other nodes could come up and down without a problem.</td>
+</tr>
+<tr>
+<td>Partition-tolerance</td>
+<td>The “live” partition would be defined as “the partition that can still connect with the Zookeeper cluster”.   I have to check on how Zookeeper handles network partitions; I believe it’s just a quorum-based algorithm (if one node is separated from the other two, it stops processing).</td>
+</tr>
+<tr>
+<td>Scalability</td>
+<td>Three Zookeeper nodes could support 100 nodes without a problem, according to anecdotal experience.  At that point, we would have the option of moving the Zookeeper nodes onto dedicated hardware. Having that option is the upside to Zookeeper’s deployment complexity: you can separate them, if there’s a need.</td>
+</tr>
+<tr>
+<td>EC2-friendliness</td>
+<td>Zookeeper uses TCP; it’s been used on EC2 before.</td>
+</tr>
+<tr>
+<td>Deployment Simplicity</td>
+<td>The main downside for Zookeeper is its operational requirements:  two classes of servers (with Zookeeper and without), potentially separate server instances running on Zookeeper-enabled servers, fast disk access required (according to the ZK operations manual, two fast disks – one for logs, the other for … er..something else.)  That’s a significant increase in operational complexity for a product that is distributed to and maintained by clients.  That also means work necessary for us to make it as turnkey as possible.A Zookeeper-based solution would pick three or five nodes to be Zookeeper nodes as well as task nodes.  Ideally, for Zookeeper’s purposes, it’d be three dedicated servers, but that isn’t going to happen in our architecture.  So Zookeeper will have to coexist with the current app on servers where it’s installed.  For deployment simplicity, I’ll probably need to come up with a way to start up Zookeeper automatically when the server comes up on those nodes. Zookeeper used to not play well as an embedded app (according to some reports from the Katta project); that may be fixed now, but if not I may need to put that logic in the bootstrap script.</td>
+</tr>
+<tr>
+<td>Implementation Simplicity</td>
+<td>Zookeeper would provide a single, shared view of the task tree.  The system would be up as long as the majority of Zookeeper nodes remained up; any node could be leader, as long as they could connect to Zookeeper to view and update the shared state of tasks.   Other nodes could potentially go straight to Zookeeper to query the task tree, if we were comfortable with losing that layer of abstraction.  Either way, it would be simple implementation-wise.</td>
+</tr>
+<tr>
+<td>Event bus</td>
+<td>Zookeeper doesn’t provide events&#8230;unless you write events directly to Zookeeper.  It could, however, obviate the need for a lot of events.  For example, we wouldn’t need a “task finished” event if all nodes just set watches on tasks&#8230;they’d be automatically notified.  Same with hearbeats, node failure, and so on – they’d be taken care of by Zookeeper.</td>
+</tr>
+</tbody>
+</table>
+Zookeeper doesn’t list AIX as a supported environment, which is interesting.  We do have to support AIX (unfortunately).
+<h2>JGroups</h2>
+<table class="zebra-striped"><col width="*"></col> <col width="*"></col> 
+<tbody>
+<tr>
+<td>Consistency</td>
+<td>JGroups is a lot more of a DIY solution, although it supports guaranteed message delivery and cluster management out-of-the-box.
+With guaranteed message delivery, we could have consistent in-memory views of the task tree without too much effort; we wouldn’t need to write something that also persisted to disk.</td>
+</tr>
+<tr>
+<td>Elasticity</td>
+<td><strike>I have to look into how elastic JGroups can be without IP multicast.  I know it can work without IP multicast; I just don’t know exactly HOW it works.</strike> <i>updated 01 March 2011:</i> JGroups has a discovery method called <a href="http://www.jgroups.org/manual/html/user-advanced.html#d0e2789">TCPPING</a>, in which you predefine a set of known members that new members will contact for membership lists. It also has a standalone &#8220;gossip router&#8221; that performs the same purpose. I&#8217;ve played with this; it works on EC2 without problems. </td>
+</tr>
+<tr>
+<td>Partition-tolerance</td>
+<td><a href="http://www.jgroups.org/manual/html/user-advanced.html#d0e3335">There are options</a>.  JGroups has a merge protocol, but it does require application-specific code to determine what exactly to do when the partitions come back together.</td>
+</tr>
+<tr>
+<td>Scalability</td>
+<td>More speculative, because JGroups has the option for infinite combinations of protocols on its stack.  Worst case, the cluster needs to define two classes of nodes, similar to the Zookeeper implementation: “nodes which can become leaders” and “nodes which can’t.”  But JGroups has been deployed with hundreds of nodes.</td>
+</tr>
+<tr>
+<td>EC2-friendliness</td>
+<td>JGroups can be used on EC2 as long as you use a non-multicast discovery method.</td>
+</tr>
+<tr>
+<td>Deployment Simplicity</td>
+<td>JGroups would be baked in; worst case, you need to define a couple properties per server (IP of one or more nodes to connect to, and perhaps something like “is this a temporary node”)</td>
+</tr>
+<tr>
+<td>Implementation Simplicity</td>
+<td>More DIY.  The basic protocol stack is provided, along with clustering, leader election, “state transfer” (to bootstrap a new node with a current picture of the task tree) and the lower level; we’d just have to tie it together and fill in the gaps for application-specific needs.</td>
+</tr>
+<tr>
+<td>Event bus</td>
+<td>JGroups can also give us message passing, taking the place of a simple JMS topic.  I have a lot of questions here, though:  how does this handle nodes dropping?  Does it buffer events until the node comes back on?  If so, how do we handle nodes that permanently drop?</td>
+</tr>
+</tbody>
+</table>
+<h2>Conclusion</h2>
+I have a followup post about Hazelcast <a href="/2011/05/15/cluster-management-and-task-distribution-part-2.html">here</a>, and a brief conclusion <a href="/2011/11/05/cluster-management-and-task-distribution-part-3.html">here</a>. 
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Matt Hoffman</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-01-29T00:00:00-05:00" pubdate data-updated="true">Jan 29<span>th</span>, 2011</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://www.matt-thinks-so.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/" data-via="matt_thinks_so" data-counturl="http://www.matt-thinks-so.com/blog/2011/01/29/cluster-management-and-task-distribution-zookeeper-vs-jgroups/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/12/10/on-configuration/" title="Previous Post: On Configuration">&laquo; On Configuration</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/05/15/cluster-management-and-task-distribution-part-2/" title="Next Post: Cluster Management and Task Distribution part 2: Caching">Cluster Management and Task Distribution part 2: Caching &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2013/10/08/refactoring/">Refactoring and Technical Debt</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/08/octopress/">On to Octopress</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/10/06/complexity/">In Defense of Easy</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/28/try-server/">Takes Too Long to Build Your Project? Try Harder.</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/24/greasemonkey/">Greasemonkey Is Underrated</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <span class="small">(5 most recent)</span>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/matthoffman">@matthoffman</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'matthoffman',
+            count: 5,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+    <h1>On Twitter:</h1>
+    <div>
+        <p><br /><a href="http://twitter.com/matt_thinks_so"
+        target="_blank">@matt_thinks_so on Twitter.</a></p>
+        <a href="http://twitter.com/matt_thinks_so" class="twitter-follow-button" data-show-count="false">Follow @matt_thinks_so</a>
+    </div>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Matt Hoffman -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'mattthinksso';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
